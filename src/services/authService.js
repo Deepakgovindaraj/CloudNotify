@@ -6,20 +6,21 @@ let currentUser = { ...mockUser }
 export const authService = {
   async login({ email, password }) {
     await simulateDelay(800)
-
+  
     if (!email || !password) {
       throw new Error('Email and password are required')
     }
-
+  
     if (password.length < 6) {
       throw new Error('Invalid credentials')
     }
-
+  
     currentUser = {
       ...currentUser,
       email,
+      name: email.split('@')[0],
     }
-
+  
     return {
       user: currentUser,
       token: 'mock_jwt_token_' + Date.now(),
@@ -51,13 +52,19 @@ export const authService = {
 
   async getProfile() {
     await simulateDelay(400)
-
-    const savedEmail = localStorage.getItem('userEmail')
-
-    return {
-      ...currentUser,
-      email: savedEmail || currentUser.email,
+  
+    const savedEmail =
+      localStorage.getItem('userEmail')
+  
+    if (savedEmail) {
+      currentUser = {
+        ...currentUser,
+        email: savedEmail,
+        name: savedEmail.split('@')[0],
+      }
     }
+  
+    return { ...currentUser }
   },
 
   async forgotPassword(email) {
