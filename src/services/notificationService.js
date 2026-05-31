@@ -1,12 +1,12 @@
-import { simulateDelay } from './api'
-import { mockNotifications, mockStats, mockRecentActivity } from '@/constants/mockData'
+import api, { simulateDelay } from './api'
+import { mockStats, mockRecentActivity } from '@/constants/mockData'
 
-let notifications = [...mockNotifications]
+let notifications = [];
 
 export const notificationService = {
   async getAll() {
-    await simulateDelay(500)
-    return [...notifications]
+    const response = await api.get('/notifications')
+    return response.data
   },
 
   async getStats() {
@@ -20,21 +20,25 @@ export const notificationService = {
   },
 
   async create(data) {
-    await simulateDelay(700)
-    const newNotification = {
-      id: 'ntf_' + Date.now(),
-      ...data,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
+    const payload = {
+      notificationId: 'ntf_' + Date.now(),
+      title: data.title,
+      message: data.message,
+      email: data.email,
+      date: data.date,
+      time: data.time,
+      channel: data.channel,
+      status: 'PENDING',
     }
-    notifications = [newNotification, ...notifications]
-    return newNotification
+  
+    const response = await api.post('/notifications', payload)
+  
+    return response.data.notification
   },
 
   async delete(id) {
-    await simulateDelay(400)
-    notifications = notifications.filter((n) => n.id !== id)
-    return { success: true }
+    const response = await api.delete(`/notifications/${id}`)
+    return response.data
   },
 
   async updateStatus(id, status) {

@@ -29,8 +29,8 @@ export function HistoryPage() {
       const q = search.toLowerCase()
       list = list.filter(
         (n) =>
-          n.title.toLowerCase().includes(q) ||
-          n.message.toLowerCase().includes(q)
+          (n.title || '').toLowerCase().includes(q) ||
+          (n.message || '').toLowerCase().includes(q)
       )
     }
     if (statusFilter !== 'all') {
@@ -58,8 +58,13 @@ export function HistoryPage() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return
+  
     setDeleting(true)
-    await deleteNotification(deleteTarget.id)
+  
+    await deleteNotification(deleteTarget.notificationId)
+  
+    await refetch()
+  
     setDeleting(false)
     setDeleteTarget(null)
   }
@@ -134,7 +139,7 @@ export function HistoryPage() {
               ) : paginated.length ? (
                 paginated.map((n) => (
                   <tr
-                    key={n.id}
+                    key={n.notificationId}
                     className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
                   >
                     <td className="px-4 py-3 font-medium">{n.title}</td>

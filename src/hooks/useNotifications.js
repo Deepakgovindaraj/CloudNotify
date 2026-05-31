@@ -46,7 +46,10 @@ export function useNotifications() {
 
   const deleteNotification = useCallback(async (id) => {
     await notificationService.delete(id)
-    setNotifications((prev) => prev.filter((n) => n.id !== id))
+  
+    setNotifications((prev) =>
+      prev.filter((n) => n.notificationId !== id)
+    )
   }, [])
 
   return {

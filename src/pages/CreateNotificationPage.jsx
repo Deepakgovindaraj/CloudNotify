@@ -16,9 +16,10 @@ const channelIcons = { telegram: Send, gmail: Mail, both: Layers }
 const initialForm = {
   title: '',
   message: '',
+  email: '',
   date: '',
   time: '',
-  channel: 'telegram',
+  channel: 'gmail',
   recurring: false,
   recurrence: 'daily',
 }
@@ -42,6 +43,7 @@ export function CreateNotificationPage() {
     if (!form.message.trim()) e.message = 'Message is required'
     if (!form.date) e.date = 'Date is required'
     if (!form.time) e.time = 'Time is required'
+    if (!form.email.trim()) e.email = 'Email is required'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -96,6 +98,16 @@ export function CreateNotificationPage() {
           onChange={update('message')}
           error={errors.message}
           placeholder="Enter the notification message..."
+        />
+
+        <Input
+          label="Recipient Email"
+          name="email"
+          type="email"
+          value={form.email}
+          onChange={update('email')}
+          error={errors.email}
+          placeholder="user@gmail.com"
         />
 
         <div className="grid gap-4 sm:grid-cols-2">

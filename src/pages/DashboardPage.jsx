@@ -93,8 +93,12 @@ export function DashboardPage() {
         ) : recent.length ? (
           <div className="grid gap-4 sm:grid-cols-2">
             {recent.map((n) => (
-              <NotificationCard key={n.id} notification={n} compact />
-            ))}
+  <NotificationCard
+    key={n.notificationId}
+    notification={n}
+    compact
+  />
+))}
           </div>
         ) : null}
       </div>
