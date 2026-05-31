@@ -11,6 +11,8 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1057.0",
+    "@aws-sdk/lib-dynamodb": "^3.1057.0",
     "nodemailer": "^8.0.10"
   }
 }

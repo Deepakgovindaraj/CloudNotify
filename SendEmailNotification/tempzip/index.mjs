@@ -1,4 +1,15 @@
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  UpdateCommand
+} from "@aws-sdk/lib-dynamodb";
+
 import nodemailer from "nodemailer";
+
+const client = new DynamoDBClient({});
+const docClient = DynamoDBDocumentClient.from(client);
+
+const TABLE_NAME = "Notifications";
 
 export const handler = async (event) => {
   try {
@@ -10,8 +21,8 @@ export const handler = async (event) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "cloudnotify.apps@gmail.com",
-        pass: process.env.GMAIL_APP_PASSWORD
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASS
       }
     });
 
@@ -24,6 +35,22 @@ export const handler = async (event) => {
         <p>${body.message}</p>
       `
     });
+
+    await docClient.send(
+      new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          notificationId: body.notificationId
+        },
+        UpdateExpression: "SET #status = :status",
+        ExpressionAttributeNames: {
+          "#status": "status"
+        },
+        ExpressionAttributeValues: {
+          ":status": "SENT"
+        }
+      })
+    );
 
     return {
       statusCode: 200,

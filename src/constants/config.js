@@ -13,7 +13,7 @@ export const RECURRENCE_OPTIONS = [
   { value: 'monthly', label: 'Monthly' },
 ]
 
-export const STATUS_OPTIONS = ['all', 'pending', 'sent', 'failed']
+export const STATUS_OPTIONS = ['all', 'PENDING', 'SENT', 'FAILED']
 
 export const TIMEZONES = [
   'UTC',

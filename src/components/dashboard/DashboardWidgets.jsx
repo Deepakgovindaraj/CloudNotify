@@ -83,7 +83,9 @@ export function RecentActivity({ activities }) {
 }
 
 export function UpcomingNotifications({ notifications }) {
-  const upcoming = notifications?.filter((n) => n.status === 'pending').slice(0, 3)
+  const upcoming = notifications?.filter(
+    (n) => n.status?.toUpperCase() === 'PENDING'
+  ).slice(0, 3)
 
   return (
     <div className="glass-card p-6 animate-slide-up">
@@ -91,7 +93,7 @@ export function UpcomingNotifications({ notifications }) {
       {upcoming?.length ? (
         <div className="space-y-3">
           {upcoming.map((n) => (
-            <NotificationCard key={n.id} notification={n} compact />
+            <NotificationCard key={n.notificationId} notification={n} compact />
           ))}
         </div>
       ) : (
