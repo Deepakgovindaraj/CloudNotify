@@ -24,21 +24,24 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (credentials) => {
     const { user: u, token } = await authService.login(credentials)
     localStorage.setItem(TOKEN_KEY, token)
-    setUser(u)
+localStorage.setItem('userEmail', u.email)
+setUser(u)
     return u
   }, [])
 
   const register = useCallback(async (data) => {
     const { user: u, token } = await authService.register(data)
     localStorage.setItem(TOKEN_KEY, token)
-    setUser(u)
+localStorage.setItem('userEmail', u.email)
+setUser(u)
     return u
   }, [])
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem('userEmail')
     setUser(null)
-  }, [])
+}, [])
 
   const updateUser = useCallback((updates) => {
     setUser((prev) => (prev ? { ...prev, ...updates } : prev))

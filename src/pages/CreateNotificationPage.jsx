@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Send, Mail, Layers } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Input, Textarea, Select } from '@/components/ui/Input'
 import { Toggle } from '@/components/ui/Toggle'
@@ -30,6 +31,7 @@ export function CreateNotificationPage() {
   const [loading, setLoading] = useState(false)
   const [successOpen, setSuccessOpen] = useState(false)
   const { createNotification } = useNotifications()
+  const { user } = useAuth()
   const navigate = useNavigate()
 
   const update = (field) => (e) => {
@@ -56,6 +58,7 @@ export function CreateNotificationPage() {
       await createNotification({
         ...form,
         time: formatTime12Hour(form.time),
+        ownerEmail: user?.email,
       })
       setSuccessOpen(true)
     } catch (err) {

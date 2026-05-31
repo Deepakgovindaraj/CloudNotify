@@ -5,7 +5,14 @@ let notifications = [];
 
 export const notificationService = {
   async getAll() {
-    const response = await api.get('/notifications')
+    const email = localStorage.getItem('userEmail')
+  
+    const response = await api.get('/notifications', {
+      params: {
+        ownerEmail: email,
+      },
+    })
+  
     return response.data
   },
 
@@ -61,6 +68,7 @@ export const notificationService = {
       title: data.title,
       message: data.message,
       email: data.email,
+      ownerEmail: data.ownerEmail,
       date: data.date,
       time: data.time,
       channel: data.channel,
