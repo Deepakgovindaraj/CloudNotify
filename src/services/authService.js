@@ -53,15 +53,12 @@ export const authService = {
   async getProfile() {
     await simulateDelay(400)
   
-    const savedEmail =
-      localStorage.getItem('userEmail')
+    const savedUser =
+      localStorage.getItem('currentUser')
   
-    if (savedEmail) {
-      currentUser = {
-        ...currentUser,
-        email: savedEmail,
-        name: savedEmail.split('@')[0],
-      }
+    if (savedUser) {
+      currentUser =
+        JSON.parse(savedUser)
     }
   
     return { ...currentUser }

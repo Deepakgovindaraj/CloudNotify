@@ -23,9 +23,18 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (credentials) => {
     const { user: u, token } = await authService.login(credentials)
+  
     localStorage.setItem(TOKEN_KEY, token)
-localStorage.setItem('userEmail', u.email)
-setUser(u)
+  
+    localStorage.setItem('userEmail', u.email)
+  
+    localStorage.setItem(
+      'currentUser',
+      JSON.stringify(u)
+    )
+  
+    setUser(u)
+  
     return u
   }, [])
 
@@ -34,14 +43,19 @@ setUser(u)
     localStorage.setItem(TOKEN_KEY, token)
 localStorage.setItem('userEmail', u.email)
 setUser(u)
+localStorage.setItem(
+  'currentUser',
+  JSON.stringify(u)
+)
     return u
   }, [])
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem('userEmail')
+    localStorage.removeItem('currentUser')
     setUser(null)
-}, [])
+  }, [])
 
   const updateUser = useCallback((updates) => {
     setUser((prev) => (prev ? { ...prev, ...updates } : prev))
