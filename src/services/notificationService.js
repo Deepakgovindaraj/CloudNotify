@@ -210,6 +210,7 @@ export const notificationService = {
     return buildRecentActivity(notificationList)
   },
 
+  
   async create(data) {
     const payload = {
       notificationId: 'ntf_' + Date.now(),
@@ -222,7 +223,7 @@ export const notificationService = {
       channel: data.channel,
       status: 'PENDING',
     }
-
+    console.log("PAYLOAD SENT:", payload)
     const response = await api.post('/notifications', payload)
 
     return response.data.notification

@@ -38,6 +38,7 @@ export function AuthProvider({ children }) {
     return u
   }, [])
 
+
   const register = useCallback(async (data) => {
     const { user: u, token } = await authService.register(data)
     localStorage.setItem(TOKEN_KEY, token)
@@ -48,6 +49,27 @@ localStorage.setItem(
   JSON.stringify(u)
 )
     return u
+  }, [])
+
+  const googleLogin = useCallback((googleUser) => {
+    localStorage.setItem(
+      'currentUser',
+      JSON.stringify(googleUser)
+    )
+  
+    localStorage.setItem(
+      'userEmail',
+      googleUser.email
+    )
+  
+    localStorage.setItem(
+      TOKEN_KEY,
+      'google_oauth_token'
+    )
+  
+    setUser(googleUser)
+  
+    return googleUser
   }, [])
 
   const logout = useCallback(() => {
@@ -63,15 +85,16 @@ localStorage.setItem(
 
   return (
     <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        isAuthenticated: !!user,
-        login,
-        register,
-        logout,
-        updateUser,
-      }}
+    value={{
+      user,
+      loading,
+      isAuthenticated: !!user,
+      login,
+      register,
+      googleLogin,
+      logout,
+      updateUser,
+    }}
     >
       {children}
     </AuthContext.Provider>

@@ -10,7 +10,12 @@ import { CHANNELS, RECURRENCE_OPTIONS } from '@/constants/config'
 import { useNotifications } from '@/hooks/useNotifications'
 import { ROUTES } from '@/constants/routes'
 import { cn } from '@/utils/cn'
-import { formatTime12Hour } from '@/utils/time'
+import {
+  to24HourTime,
+  TIME_PICKER_HOUR_OPTIONS,
+  TIME_PICKER_MINUTE_OPTIONS,
+  TIME_PICKER_PERIOD_OPTIONS,
+} from '@/utils/time'
 
 const channelIcons = { telegram: Send, gmail: Mail, both: Layers }
 
@@ -19,7 +24,9 @@ const initialForm = {
   message: '',
   email: '',
   date: '',
-  time: '',
+  timeHour: '',
+  timeMinute: '',
+  timePeriod: 'PM',
   channel: 'gmail',
   recurring: false,
   recurrence: 'daily',
@@ -44,20 +51,30 @@ export function CreateNotificationPage() {
     if (!form.title.trim()) e.title = 'Title is required'
     if (!form.message.trim()) e.message = 'Message is required'
     if (!form.date) e.date = 'Date is required'
-    if (!form.time) e.time = 'Time is required'
+    if (!form.timeHour || form.timeMinute === '' || !form.timePeriod) {
+      e.time = 'Time is required'
+    }
     if (!form.email.trim()) e.email = 'Email is required'
     setErrors(e)
     return Object.keys(e).length === 0
   }
-
+ 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validate()) return
     setLoading(true)
     try {
+      const displayTime =
+  `${form.timeHour}:${form.timeMinute} ${form.timePeriod}`
       await createNotification({
-        ...form,
-        time: formatTime12Hour(form.time),
+        title: form.title,
+        message: form.message,
+        email: form.email,
+        date: form.date,
+        time: displayTime,
+        channel: form.channel,
+        recurring: form.recurring,
+        recurrence: form.recurrence,
         ownerEmail: user?.email,
       })
       setSuccessOpen(true)
@@ -122,15 +139,90 @@ export function CreateNotificationPage() {
             onChange={update('date')}
             error={errors.date}
           />
-          <Input
-            label="Time (12-hour)"
-            name="time"
-            type="time"
-            value={form.time}
-            onChange={update('time')}
-            error={errors.time}
-            hint="Uses your local timezone"
-          />
+          <div className="space-y-1.5">
+            <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Time
+            </span>
+            <div
+              className="flex flex-wrap items-center gap-2"
+              role="group"
+              aria-label="Notification time"
+            >
+              <select
+                id="time-hour"
+                name="timeHour"
+                value={form.timeHour}
+                onChange={update('timeHour')}
+                aria-label="Hour"
+                className={cn(
+                  'w-[4.25rem] rounded-xl border bg-white px-2 py-2.5 text-center text-sm font-medium tabular-nums transition-all',
+                  'border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-100',
+                  'focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20',
+                  errors.time && 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                )}
+              >
+                {TIME_PICKER_HOUR_OPTIONS.map((opt) => (
+                  <option key={opt.value || 'hh'} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <span className="text-slate-400 font-medium select-none" aria-hidden="true">
+                :
+              </span>
+              <select
+                id="time-minute"
+                name="timeMinute"
+                value={form.timeMinute}
+                onChange={update('timeMinute')}
+                aria-label="Minute"
+                className={cn(
+                  'w-[4.25rem] rounded-xl border bg-white px-2 py-2.5 text-center text-sm font-medium tabular-nums transition-all',
+                  'border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-100',
+                  'focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20',
+                  errors.time && 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                )}
+              >
+                {TIME_PICKER_MINUTE_OPTIONS.map((opt) => (
+                  <option key={opt.value === '' ? 'mm' : opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                id="time-period"
+                name="timePeriod"
+                value={form.timePeriod}
+                onChange={update('timePeriod')}
+                aria-label="AM or PM"
+                className={cn(
+                  'w-[4.5rem] rounded-xl border bg-white px-2 py-2.5 text-center text-sm font-medium transition-all',
+                  'border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-100',
+                  'focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20',
+                  errors.time && 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                )}
+              >
+                {TIME_PICKER_PERIOD_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {form.timeHour && form.timeMinute !== '' && (
+              <p className="text-xs text-slate-500">
+                Selected: {form.timeHour}:{form.timeMinute} {form.timePeriod}
+              </p>
+            )}
+            {errors.time && (
+              <p className="text-xs text-red-500" role="alert">
+                {errors.time}
+              </p>
+            )}
+            {!errors.time && (
+              <p className="text-xs text-slate-500">Uses your local timezone</p>
+            )}
+          </div>
         </div>
 
         <div>

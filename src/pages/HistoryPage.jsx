@@ -9,7 +9,7 @@ import { Modal } from '@/components/ui/Modal'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { TableRowSkeleton } from '@/components/ui/Skeleton'
-import { formatDate } from '@/utils/formatters'
+import { formatDate, formatNotificationTime } from '@/utils/formatters'
 import { STATUS_OPTIONS } from '@/constants/config'
 
 const PAGE_SIZE = 5
@@ -34,7 +34,10 @@ export function HistoryPage() {
       )
     }
     if (statusFilter !== 'all') {
-      list = list.filter((n) => n.status === statusFilter)
+      list = list.filter(
+        (n) =>
+          (n.status || '').toLowerCase() === statusFilter.toLowerCase()
+      )
     }
     list.sort((a, b) => {
       const aVal = a[sortKey] ?? ''

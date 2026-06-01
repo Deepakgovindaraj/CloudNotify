@@ -82,9 +82,17 @@ export function ProfilePage() {
 
       <div className="glass-card p-6">
         <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-accent-500 text-2xl font-bold text-white">
-            {user?.name?.split(' ').map((n) => n[0]).join('').slice(0, 2)}
-          </div>
+        {user?.picture ? (
+  <img
+    src={user.picture}
+    alt={user.name}
+    className="h-16 w-16 rounded-2xl object-cover"
+  />
+) : (
+  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-accent-500 text-2xl font-bold text-white">
+    {user?.name?.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+  </div>
+)}  
           <div>
             <h2 className="font-display text-xl font-semibold">{user?.name}</h2>
             <p className="text-slate-500">{user?.email}</p>

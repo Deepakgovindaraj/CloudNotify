@@ -35,6 +35,12 @@ export function Navbar({ onMenuClick }) {
     .slice(0, 2)
     .toUpperCase() || 'CN'
 
+  const [pictureError, setPictureError] = useState(false)
+
+  useEffect(() => {
+    setPictureError(false)
+  }, [user?.picture])
+
   return (
     <header className="sticky top-0 z-30 h-16 glass border-b border-slate-200/50 dark:border-slate-800/50">
       <div className="flex h-full items-center justify-between px-4 lg:px-6">
@@ -72,9 +78,18 @@ export function Navbar({ onMenuClick }) {
               aria-expanded={dropdownOpen}
               aria-haspopup="true"
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 text-xs font-bold text-white">
-                {initials}
-              </div>
+              {user?.picture && !pictureError ? (
+                <img
+                  src={user.picture}
+                  alt={user.name}
+                  className="h-10 w-10 rounded-full object-cover border border-slate-200"
+                  onError={() => setPictureError(true)}
+                />
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 text-xs font-bold text-white">
+                  {initials}
+                </div>
+              )}
               <span className="hidden sm:block text-sm font-medium max-w-[120px] truncate">
                 {user?.name}
               </span>
