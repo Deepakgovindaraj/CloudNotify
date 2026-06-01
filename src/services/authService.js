@@ -4,7 +4,7 @@ import { mockUser } from '@/constants/mockData'
 let currentUser = { ...mockUser }
 
 export const authService = {
-  async login({ email, password }) {
+  async login({ name, email, password }) {
     await simulateDelay(800)
   
     if (!email || !password) {
@@ -18,7 +18,7 @@ export const authService = {
     currentUser = {
       ...currentUser,
       email,
-      name: email.split('@')[0],
+      name: name || email.split('@')[0],
     }
   
     return {

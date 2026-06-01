@@ -25,7 +25,7 @@ export function AuthPage() {
     else if (tab === TABS.register && form.password.length < 8) {
       e.password = 'Password must be at least 8 characters'
     }
-    if (tab === TABS.register && !form.name) e.name = 'Name is required'
+    if ((tab === TABS.register || tab === TABS.login) && !form.name) e.name = 'Name is required'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -37,7 +37,7 @@ export function AuthPage() {
     setErrors({})
     try {
       if (tab === TABS.login) {
-        await login({ email: form.email, password: form.password })
+        await login({ name: form.name, email: form.email, password: form.password })
       } else {
         await register(form)
       }
@@ -88,7 +88,7 @@ export function AuthPage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {tab === TABS.register && (
+        {(tab === TABS.register || tab === TABS.login) && (
           <Input
             label="Full Name"
             name="name"
