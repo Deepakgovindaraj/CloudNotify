@@ -7,8 +7,15 @@ import { Input } from '@/components/ui/Input'
 import { Toggle } from '@/components/ui/Toggle'
 import { Modal } from '@/components/ui/Modal'
 import { cn } from '@/utils/cn'
+import { telegramService } from '@/services/telegramService'
 
-function ConnectionCard({ title, connected, icon: Icon, color }) {
+function ConnectionCard({
+  title,
+  connected,
+  icon: Icon,
+  color,
+  onClick
+})  {
   return (
     <div className="glass-card p-5 flex items-center justify-between">
       <div className="flex items-center gap-4">
@@ -28,9 +35,13 @@ function ConnectionCard({ title, connected, icon: Icon, color }) {
         ) : (
           <XCircle className="h-5 w-5 text-slate-400" />
         )}
-        <Button variant={connected ? 'secondary' : 'primary'} size="sm">
-          {connected ? 'Disconnect' : 'Connect'}
-        </Button>
+        <Button
+  variant={connected ? 'secondary' : 'primary'}
+  size="sm"
+  onClick={onClick}
+>
+  {connected ? 'Disconnect' : 'Connect'}
+</Button>
       </div>
     </div>
   )
@@ -44,6 +55,29 @@ export function ProfilePage() {
   const [loading, setLoading] = useState(false)
   const [successOpen, setSuccessOpen] = useState(false)
   const [errors, setErrors] = useState({})
+  const connectTelegram = async () => {
+    try {
+      await telegramService.connect({
+        email: user.email,
+        telegramChatId: "2009711470",
+        telegramUsername: user.name || user.email
+      })
+  
+      updateUser({
+        telegramConnected: true
+      })
+  
+      window.open(
+        "https://t.me/CloudNotifyApps_bot",
+        "_blank"
+      )
+  
+      alert("Telegram connected successfully")
+    } catch (error) {
+      console.error(error)
+      alert("Failed to connect Telegram")
+    }
+  }
 
   const handlePasswordChange = async (e) => {
     e.preventDefault()
@@ -113,11 +147,12 @@ export function ProfilePage() {
           color="bg-gradient-to-br from-rose-500 to-rose-600"
         />
         <ConnectionCard
-          title="Telegram"
-          connected={user?.telegramConnected}
-          icon={Send}
-          color="bg-gradient-to-br from-sky-500 to-sky-600"
-        />
+  title="Telegram"
+  connected={user?.telegramConnected}
+  icon={Send}
+  color="bg-gradient-to-br from-sky-500 to-sky-600"
+  onClick={connectTelegram}
+/>
       </div>
 
       <div className="glass-card p-6">

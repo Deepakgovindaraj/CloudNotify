@@ -13,6 +13,7 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1057.0",
     "@aws-sdk/lib-dynamodb": "^3.1057.0",
+    "axios": "^1.16.1",
     "nodemailer": "^8.0.10"
   }
 }
