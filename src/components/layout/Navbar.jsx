@@ -79,12 +79,16 @@ export function Navbar({ onMenuClick }) {
               aria-haspopup="true"
             >
               {user?.picture && !pictureError ? (
-                <img
-                  src={user.picture}
-                  alt={user.name}
-                  className="h-10 w-10 rounded-full object-cover border border-slate-200"
-                  onError={() => setPictureError(true)}
-                />
+               <img
+               src={user.picture}
+               alt={user.name}
+               referrerPolicy="no-referrer"
+               className="h-10 w-10 rounded-full object-cover border border-slate-200"
+               onError={() => {
+                 console.log('IMAGE FAILED')
+                 setPictureError(true)
+               }}
+             />
               ) : (
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 text-xs font-bold text-white">
                   {initials}

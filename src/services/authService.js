@@ -1,7 +1,5 @@
 import { simulateDelay } from './api'
-import { mockUser } from '@/constants/mockData'
-
-let currentUser = { ...mockUser }
+let currentUser = null
 
 export const authService = {
   async login({ name, email, password }) {
@@ -16,7 +14,6 @@ export const authService = {
     }
   
     currentUser = {
-      ...currentUser,
       email,
       name: name || email.split('@')[0],
     }
@@ -39,7 +36,6 @@ export const authService = {
     }
 
     currentUser = {
-      ...currentUser,
       name,
       email,
     }
@@ -56,12 +52,13 @@ export const authService = {
     const savedUser =
       localStorage.getItem('currentUser')
   
-    if (savedUser) {
-      currentUser =
-        JSON.parse(savedUser)
+    if (!savedUser) {
+      throw new Error('No user found')
     }
   
-    return { ...currentUser }
+    currentUser = JSON.parse(savedUser)
+  
+    return currentUser
   },
 
   async forgotPassword(email) {

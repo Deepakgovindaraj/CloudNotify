@@ -38,6 +38,7 @@ function ConnectionCard({ title, connected, icon: Icon, color }) {
 
 export function ProfilePage() {
   const { user, updateUser } = useAuth()
+  const [pictureError, setPictureError] = useState(false)
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' })
   const [prefs, setPrefs] = useState(user?.preferences || {})
   const [loading, setLoading] = useState(false)
@@ -82,12 +83,14 @@ export function ProfilePage() {
 
       <div className="glass-card p-6">
         <div className="flex items-center gap-4">
-        {user?.picture ? (
-  <img
-    src={user.picture}
-    alt={user.name}
-    className="h-16 w-16 rounded-2xl object-cover"
-  />
+        {user?.picture && !pictureError? (
+ <img
+ src={user.picture}
+ alt={user.name}
+ referrerPolicy="no-referrer"
+ className="h-16 w-16 rounded-2xl object-cover"
+ onError={() => setPictureError(true)}
+/>
 ) : (
   <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-accent-500 text-2xl font-bold text-white">
     {user?.name?.split(' ').map((n) => n[0]).join('').slice(0, 2)}
