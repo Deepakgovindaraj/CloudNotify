@@ -57,22 +57,14 @@ export function ProfilePage() {
   const [errors, setErrors] = useState({})
   const connectTelegram = async () => {
     try {
-      await telegramService.connect({
-        email: user.email,
-        telegramChatId: "2009711470",
-        telegramUsername: user.name || user.email
-      })
+      const telegramUrl =
+        `https://t.me/CloudNotifyApps_bot?start=${encodeURIComponent(user.email)}`
   
-      updateUser({
-        telegramConnected: true
-      })
+      window.open(telegramUrl, "_blank")
   
-      window.open(
-        "https://t.me/CloudNotifyApps_bot",
-        "_blank"
+      alert(
+        "Open Telegram and click START in the bot to complete connection."
       )
-  
-      alert("Telegram connected successfully")
     } catch (error) {
       console.error(error)
       alert("Failed to connect Telegram")
