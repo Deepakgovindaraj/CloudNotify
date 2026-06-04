@@ -1,5 +1,11 @@
 import { useState } from 'react'
-import { Mail, Send, CheckCircle, XCircle, Lock } from 'lucide-react'
+import {
+  Send,
+  CheckCircle,
+  XCircle,
+  Lock,
+  Mail
+} from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { authService } from '@/services/authService'
 import { Button } from '@/components/ui/Button'
@@ -15,7 +21,7 @@ function ConnectionCard({
   icon: Icon,
   color,
   onClick
-})  {
+}) {
   return (
     <div className="glass-card p-5 flex items-center justify-between">
       <div className="flex items-center gap-4">
@@ -36,19 +42,23 @@ function ConnectionCard({
           <XCircle className="h-5 w-5 text-slate-400" />
         )}
         <Button
-  variant={connected ? 'secondary' : 'primary'}
-  size="sm"
-  onClick={onClick}
->
-  {connected ? 'Disconnect' : 'Connect'}
-</Button>
+          variant={connected ? 'secondary' : 'primary'}
+          size="sm"
+          onClick={onClick}
+        >
+          {connected ? 'Disconnect' : 'Connect'}
+        </Button>
       </div>
     </div>
   )
 }
 
 export function ProfilePage() {
-  const { user, updateUser } = useAuth()
+  const {
+    user,
+    updateUser,
+    refreshTelegramStatus
+  } = useAuth()
   const [pictureError, setPictureError] = useState(false)
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' })
   const [prefs, setPrefs] = useState(user?.preferences || {})
@@ -65,6 +75,11 @@ export function ProfilePage() {
       alert(
         "Open Telegram and click START in the bot to complete connection."
       )
+  
+      setTimeout(async () => {
+        await refreshTelegramStatus()
+      }, 5000)
+  
     } catch (error) {
       console.error(error)
       alert("Failed to connect Telegram")
@@ -109,19 +124,19 @@ export function ProfilePage() {
 
       <div className="glass-card p-6">
         <div className="flex items-center gap-4">
-        {user?.picture && !pictureError? (
- <img
- src={user.picture}
- alt={user.name}
- referrerPolicy="no-referrer"
- className="h-16 w-16 rounded-2xl object-cover"
- onError={() => setPictureError(true)}
-/>
-) : (
-  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-accent-500 text-2xl font-bold text-white">
-    {user?.name?.split(' ').map((n) => n[0]).join('').slice(0, 2)}
-  </div>
-)}  
+          {user?.picture && !pictureError ? (
+            <img
+              src={user.picture}
+              alt={user.name}
+              referrerPolicy="no-referrer"
+              className="h-16 w-16 rounded-2xl object-cover"
+              onError={() => setPictureError(true)}
+            />
+          ) : (
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-accent-500 text-2xl font-bold text-white">
+              {user?.name?.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+            </div>
+          )}
           <div>
             <h2 className="font-display text-xl font-semibold">{user?.name}</h2>
             <p className="text-slate-500">{user?.email}</p>
@@ -133,18 +148,18 @@ export function ProfilePage() {
       <div className="space-y-4">
         <h3 className="font-display font-semibold">Channel Connections</h3>
         <ConnectionCard
-          title="Gmail"
-          connected={user?.gmailConnected}
-          icon={Mail}
-          color="bg-gradient-to-br from-rose-500 to-rose-600"
-        />
-        <ConnectionCard
-  title="Telegram"
-  connected={user?.telegramConnected}
-  icon={Send}
-  color="bg-gradient-to-br from-sky-500 to-sky-600"
-  onClick={connectTelegram}
+  title="Gmail"
+  connected={user?.gmailConnected}
+  icon={Mail}
+  color="bg-gradient-to-br from-rose-500 to-rose-600"
 />
+        <ConnectionCard
+          title="Telegram"
+          connected={user?.telegramConnected}
+          icon={Send}
+          color="bg-gradient-to-br from-sky-500 to-sky-600"
+          onClick={connectTelegram}
+        />
       </div>
 
       <div className="glass-card p-6">
