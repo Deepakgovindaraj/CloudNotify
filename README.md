@@ -69,19 +69,27 @@ src/
 └── main.jsx
 ```
 
-## AWS Amplify Deployment
+## Cloudflare Pages Deployment
 
-1. Connect your repository in the AWS Amplify Console.
-2. Amplify detects `amplify.yml` automatically.
-3. Set environment variables (`VITE_API_BASE_URL`, `VITE_APP_NAME`) in the Amplify console.
-4. SPA routing is handled via `public/_redirects`.
+1. Connect the repository in the Cloudflare dashboard under **Workers & Pages**.
+2. Select the `dist` output directory and use `npm run build` as the build command.
+3. Configure these variables in the Pages project under **Settings → Environment variables**:
+   - `VITE_API_BASE_URL`: the deployed Cloudflare Worker API URL.
+   - `VITE_APP_NAME`: `CloudNotify`.
+   - `VITE_GOOGLE_CLIENT_ID`: the Google OAuth web client ID.
+4. Configure the variables for the environment being tested (Production and/or Preview).
+5. Redeploy Pages after changing any `VITE_*` variable because Vite embeds them during the build.
+6. Add the Pages origin, without a path, to Google OAuth **Authorized JavaScript origins**. For example:
+   `https://cloudnotify.pages.dev`
+7. SPA routing is handled via `public/_redirects`.
 
 ## Environment Variables
 
 | Variable | Description |
 |----------|-------------|
-| `VITE_API_BASE_URL` | Backend API base URL |
+| `VITE_API_BASE_URL` | Cloudflare Worker API base URL |
 | `VITE_APP_NAME` | Application display name |
+| `VITE_GOOGLE_CLIENT_ID` | Google OAuth web client ID |
 
 ## License
 
