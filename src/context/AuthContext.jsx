@@ -90,17 +90,29 @@ localStorage.setItem(
       TOKEN_KEY,
       'google_oauth_token'
     )
-  
-    const status = await channelService.getStatus(
-      googleUser.email
-    )
-    
+
     setUser({
       ...googleUser,
       gmailConnected: true,
-      telegramConnected: status.telegramConnected
+      telegramConnected: false
     })
-  
+
+    channelService
+      .getStatus(googleUser.email)
+      .then((status) => {
+        setUser((currentUser) => (
+          currentUser
+            ? {
+                ...currentUser,
+                telegramConnected: status.telegramConnected
+              }
+            : currentUser
+        ))
+      })
+      .catch((err) => {
+        console.error('Failed to load Telegram status', err)
+      })
+
     return googleUser
   }, [])
 

@@ -23,7 +23,7 @@ export function AuthPage() {
         picture: decoded.picture,
       }
 
-      googleLogin(googleUser)
+      await googleLogin(googleUser)
 
       navigate(ROUTES.DASHBOARD)
     } catch (err) {
