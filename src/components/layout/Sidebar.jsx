@@ -42,17 +42,19 @@ export function Sidebar({ isOpen, onClose }) {
       <aside
         className={cn(
           'fixed top-0 left-0 z-50 h-full w-64 flex flex-col',
-          'bg-white dark:bg-[#14161f] border-r border-slate-200 dark:border-slate-800',
+          'bg-[#f5f5f5] dark:bg-[#14161f] border-r border-slate-200/80 dark:border-slate-800',
           'transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex h-16 items-center justify-between px-5 border-b border-slate-200 dark:border-slate-800">
+        <div className="flex h-16 items-center justify-between px-5 border-b border-slate-200/80 dark:border-slate-800">
           <NavLink to={ROUTES.DASHBOARD} className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600 to-accent-500 text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600 to-accent-500 text-white shadow-sm shadow-indigo-500/20">
               <Cloud className="h-5 w-5" />
             </div>
-            <span className="font-display font-bold text-lg gradient-text">{APP_NAME}</span>
+            <span className="font-display text-[1.05rem] font-bold tracking-tight text-slate-800 dark:text-slate-100">
+              {APP_NAME}
+            </span>
           </NavLink>
           <button onClick={onClose} className="lg:hidden p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
             <X className="h-5 w-5" />
@@ -69,9 +71,9 @@ export function Sidebar({ isOpen, onClose }) {
                 onClick={onClose}
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                    'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[0.98rem] font-medium transition-all duration-200',
                     isActive
-                      ? 'bg-gradient-to-r from-primary-500/10 to-accent-500/10 text-primary-600 dark:text-primary-400 border border-primary-500/20'
+                      ? 'bg-[#efe4ff] text-[#4a4d5a] shadow-[inset_0_0_0_1px_rgba(99,102,241,0.04)]'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50'
                   )
                 }
@@ -83,10 +85,10 @@ export function Sidebar({ isOpen, onClose }) {
           })}
         </nav>
 
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-          <div className="rounded-xl bg-gradient-to-br from-primary-500/10 to-accent-500/10 p-4">
-            <p className="text-xs font-medium text-primary-600 dark:text-primary-400">Pro Tip</p>
-            <p className="text-xs text-slate-500 mt-1">Connect both channels for maximum reach.</p>
+        <div className="p-4 border-t border-slate-200/80 dark:border-slate-800">
+          <div className="rounded-xl bg-[#f1ebff] p-4 text-left shadow-[inset_0_0_0_1px_rgba(124,93,255,0.04)]">
+            <p className="text-xs font-medium text-[#6147d5]">Pro Tip</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">Connect both channels for maximum reach.</p>
           </div>
         </div>
       </aside>
