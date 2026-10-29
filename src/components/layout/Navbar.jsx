@@ -207,8 +207,8 @@ export function Navbar({ onMenuClick }) {
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-56 glass-card py-2 shadow-xl animate-scale-in">
-                <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-700">
+              <div className="absolute right-0 mt-2 w-56 overflow-hidden rounded-2xl border border-violet-300/60 bg-gradient-to-br from-violet-100 via-indigo-100 to-purple-100 py-2 shadow-xl shadow-violet-200/50 animate-scale-in dark:border-violet-800/70 dark:from-violet-950/80 dark:via-indigo-950/80 dark:to-purple-950/80 dark:shadow-black/20">
+                <div className="px-4 py-2 border-b border-violet-200/70 dark:border-violet-800/60">
                   <p className="text-sm font-medium truncate">{user?.name}</p>
                   <p className="text-xs text-slate-500 truncate">{user?.email}</p>
                 </div>
