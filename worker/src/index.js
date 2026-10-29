@@ -100,8 +100,12 @@ async function authenticateGoogle(request, env) {
   const claims = await response.json()
   const issuerValid = claims.iss === 'accounts.google.com' || claims.iss === 'https://accounts.google.com'
   const expiresAt = Number(claims.exp)
-  if (claims.aud !== env.GOOGLE_CLIENT_ID || !issuerValid ||
-      !claims.email || claims.email_verified !== 'true' || !Number.isFinite(expiresAt) ||
+  const audienceValid = Array.isArray(claims.aud)
+    ? claims.aud.includes(env.GOOGLE_CLIENT_ID)
+    : claims.aud === env.GOOGLE_CLIENT_ID
+  const emailVerified = claims.email_verified === true || claims.email_verified === 'true'
+  if (!audienceValid || !issuerValid ||
+      !claims.email || !emailVerified || !Number.isFinite(expiresAt) ||
       expiresAt * 1000 <= Date.now()) {
     return json({ error: 'Google authentication failed' }, 401, getOrigin(request, env))
   }

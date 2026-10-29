@@ -49,7 +49,9 @@ export function AuthPage() {
       navigate(ROUTES.DASHBOARD)
     } catch (err) {
       console.error('Google Login Error', err)
-      setAuthError('Google sign-in failed. Please try again.')
+      setAuthError(
+        err.response?.data?.error || 'Google sign-in failed. Please try again.'
+      )
     }
   }
 
