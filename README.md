@@ -98,10 +98,12 @@ notifications run in the timezone selected in Settings.
 Telegram webhook. The Profile page now creates a short-lived, single-use
 Telegram connection code.
 
-The current frontend authentication is a client-side demo flow, so the
-`/telegram/link-code` endpoint requires a bearer token but cannot independently
-verify its email claim. Production deployments should replace the demo auth with
-server-validated sessions before treating account linking as fully verified.
+Google sign-in credentials are verified by the Worker through Google's
+token-introspection endpoint. The Worker issues a short-lived opaque session
+token stored only as a hash in D1; authenticated notification and channel
+endpoints derive the account email from that session rather than trusting
+client-supplied email fields. Apply all migrations, including
+`0004_auth_sessions.sql`, before deploying the Worker.
 
 ### Frontend (Cloudflare Pages)
 
@@ -116,6 +118,26 @@ server-validated sessions before treating account linking as fully verified.
 6. Add the Pages origin, without a path, to Google OAuth **Authorized JavaScript origins**. For example:
    `https://cloudnotify.pages.dev`
 7. SPA routing is handled via `public/_redirects`.
+
+### Telegram Mini App Google sign-in
+
+CloudNotify uses Google Identity Services (`@react-oauth/google`) for normal
+browser sign-in. Telegram's embedded WebView cannot reliably complete that GIS
+flow because Google's account chooser requires browser capabilities that are
+blocked in the WebView; this causes the `postMessage` error and blank page.
+
+The app loads Telegram's official Web Apps SDK and detects a real Mini App
+session using `Telegram.WebApp.initData`. In Telegram it does not render the
+GIS button. Instead, **Continue in external browser** calls
+`Telegram.WebApp.openLink()` and opens the existing `/auth` page. No tokens,
+cookies, localStorage values, or `postMessage` calls are exchanged between the
+two contexts, so the existing browser flow remains unchanged and the user is
+given an explicit return instruction.
+
+No additional environment variables or Google Cloud Console callback URLs are
+required for this fallback. Keep `https://cloudnotify.pages.dev` in Authorized
+JavaScript origins; do not add a Telegram WebView origin or weaken Google's
+embedded-browser restrictions.
 
 ## Environment Variables
 

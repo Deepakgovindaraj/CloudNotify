@@ -1,4 +1,4 @@
-import { simulateDelay } from './api'
+import api, { simulateDelay } from './api'
 let currentUser = null
 
 export const authService = {
@@ -44,6 +44,11 @@ export const authService = {
       user: currentUser,
       token: 'mock_jwt_token_' + Date.now(),
     }
+  },
+
+  async googleLogin(credential) {
+    const response = await api.post('/auth/google', { credential })
+    return response.data
   },
 
   async getProfile() {

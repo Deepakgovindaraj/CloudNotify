@@ -72,6 +72,57 @@ async function hashValue(value) {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
 }
 
+async function authenticatedUser(request, env) {
+  const authorization = request.headers.get('Authorization') || ''
+  const match = authorization.match(/^Bearer\s+(.+)$/i)
+  if (!match) return null
+  const tokenHash = await hashValue(match[1])
+  return env.DB.prepare(
+    `SELECT email FROM auth_sessions
+      WHERE token_hash = ? AND expires_at > CURRENT_TIMESTAMP`
+  ).bind(tokenHash).first()
+}
+
+async function authenticateGoogle(request, env) {
+  const body = await request.json()
+  const credential = String(body.credential || '')
+  if (!credential || !env.GOOGLE_CLIENT_ID) {
+    return json({ error: 'Google authentication is not configured' }, 503, getOrigin(request, env))
+  }
+
+  const response = await fetch(
+    `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`
+  )
+  if (!response.ok) {
+    return json({ error: 'Google authentication failed' }, 401, getOrigin(request, env))
+  }
+
+  const claims = await response.json()
+  const issuerValid = claims.iss === 'accounts.google.com' || claims.iss === 'https://accounts.google.com'
+  const expiresAt = Number(claims.exp)
+  if (claims.aud !== env.GOOGLE_CLIENT_ID || !issuerValid ||
+      !claims.email || claims.email_verified !== 'true' || !Number.isFinite(expiresAt) ||
+      expiresAt * 1000 <= Date.now()) {
+    return json({ error: 'Google authentication failed' }, 401, getOrigin(request, env))
+  }
+
+  const token = crypto.randomUUID().replaceAll('-', '') + crypto.randomUUID().replaceAll('-', '')
+  const tokenHash = await hashValue(token)
+  await env.DB.prepare(
+    `INSERT INTO auth_sessions (token_hash, email, expires_at)
+     VALUES (?, ?, datetime('now', '+7 days'))`
+  ).bind(tokenHash, claims.email.toLowerCase()).run()
+
+  return json({
+    user: {
+      name: claims.name || claims.email.split('@')[0],
+      email: claims.email.toLowerCase(),
+      picture: claims.picture || null,
+    },
+    token,
+  }, 200, getOrigin(request, env))
+}
+
 async function sendTelegramMessage(env, chatId, text) {
   if (!env.TELEGRAM_BOT_TOKEN) throw new Error('TELEGRAM_BOT_TOKEN is not configured')
   const response = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -83,14 +134,11 @@ async function sendTelegramMessage(env, chatId, text) {
 }
 
 async function createTelegramLinkCode(request, env) {
-  if (!request.headers.get('Authorization')) {
+  const user = await authenticatedUser(request, env)
+  if (!user) {
     return json({ error: 'Authentication is required' }, 401, getOrigin(request, env))
   }
-  const body = await request.json()
-  const email = String(body.email || '').trim().toLowerCase()
-  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-    return json({ error: 'A valid email is required' }, 400, getOrigin(request, env))
-  }
+  const email = user.email
   const code = crypto.randomUUID().replaceAll('-', '')
   const codeHash = await hashValue(code)
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
@@ -102,21 +150,23 @@ async function createTelegramLinkCode(request, env) {
 }
 
 async function listNotifications(request, env) {
-  const ownerEmail = new URL(request.url).searchParams.get('ownerEmail')
-  if (!ownerEmail) return json({ error: 'ownerEmail is required' }, 400, getOrigin(request, env))
+  const user = await authenticatedUser(request, env)
+  if (!user) return json({ error: 'Authentication is required' }, 401, getOrigin(request, env))
   const result = await env.DB.prepare(
     `SELECT notification_id, title, message, recipient_email, owner_email,
             scheduled_date, scheduled_time, timezone, channel, recurring, recurrence, status
        FROM notifications
       WHERE owner_email = ?
       ORDER BY scheduled_date DESC, scheduled_time DESC`
-  ).bind(ownerEmail).all()
+  ).bind(user.email).all()
   return json(result.results.map(mapNotification), 200, getOrigin(request, env))
 }
 
 async function createNotification(request, env) {
+  const user = await authenticatedUser(request, env)
+  if (!user) return json({ error: 'Authentication is required' }, 401, getOrigin(request, env))
   const body = await request.json()
-  const ownerEmail = String(body.ownerEmail || '').trim()
+  const ownerEmail = user.email
   const recipientEmail = String(body.email || '').trim()
   const date = String(body.date || '').trim()
   const time = parseTime(body.time)
@@ -153,17 +203,21 @@ async function createNotification(request, env) {
 }
 
 async function deleteNotification(request, env, id) {
-  const result = await env.DB.prepare('DELETE FROM notifications WHERE notification_id = ?').bind(id).run()
+  const user = await authenticatedUser(request, env)
+  if (!user) return json({ error: 'Authentication is required' }, 401, getOrigin(request, env))
+  const result = await env.DB.prepare(
+    'DELETE FROM notifications WHERE notification_id = ? AND owner_email = ?'
+  ).bind(id, user.email).run()
   if (!result.meta.changes) return json({ error: 'Notification not found' }, 404, getOrigin(request, env))
   return json({ success: true }, 200, getOrigin(request, env))
 }
 
 async function getChannelStatus(request, env) {
-  const email = new URL(request.url).searchParams.get('email')
-  if (!email) return json({ error: 'email is required' }, 400, getOrigin(request, env))
+  const user = await authenticatedUser(request, env)
+  if (!user) return json({ error: 'Authentication is required' }, 401, getOrigin(request, env))
   const row = await env.DB.prepare(
     'SELECT telegram_connected, telegram_username, telegram_notifications_enabled FROM user_channels WHERE email = ?'
-  ).bind(email).first()
+  ).bind(user.email).first()
   return json({
     telegramConnected: Boolean(row?.telegram_connected),
     telegramUsername: row?.telegram_username || null,
@@ -398,6 +452,7 @@ export default {
       if (url.pathname === '/' && request.method === 'GET') {
         return json({ message: 'CloudNotify API is running', status: 'success' }, 200, origin)
       }
+      if (url.pathname === '/auth/google' && request.method === 'POST') return await authenticateGoogle(request, env)
       if (url.pathname === '/notifications' && request.method === 'GET') return await listNotifications(request, env)
       if (url.pathname === '/notifications' && request.method === 'POST') return await createNotification(request, env)
       if (url.pathname.startsWith('/notifications/') && request.method === 'DELETE') {

@@ -97,7 +97,8 @@ notify('Gmail connected', 'Your Gmail channel is connected and ready.')
     return u
   }, [notify, welcomeIfFirstLogin])
 
-  const googleLogin = useCallback(async (googleUser) => {
+  const googleLogin = useCallback(async (credential) => {
+    const { user: googleUser, token } = await authService.googleLogin(credential)
     localStorage.setItem(
       'currentUser',
       JSON.stringify(googleUser)
@@ -110,7 +111,7 @@ notify('Gmail connected', 'Your Gmail channel is connected and ready.')
   
     localStorage.setItem(
       TOKEN_KEY,
-      'google_oauth_token'
+      token
     )
 
     setUser({
