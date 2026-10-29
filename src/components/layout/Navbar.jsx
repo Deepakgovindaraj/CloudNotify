@@ -14,6 +14,7 @@ export function Navbar({ onMenuClick }) {
   const { t } = useLanguage()
   const { items, unreadCount, markAllRead, removeNotification, clearAll } = useAppNotifications()
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [deletingNotificationIds, setDeletingNotificationIds] = useState(() => new Set())
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
@@ -35,6 +36,18 @@ export function Navbar({ onMenuClick }) {
   const handleLogout = () => {
     logout()
     navigate(ROUTES.AUTH)
+  }
+
+  const handleDeleteNotification = (id) => {
+    setDeletingNotificationIds((current) => new Set(current).add(id))
+    window.setTimeout(() => {
+      removeNotification(id)
+      setDeletingNotificationIds((current) => {
+        const next = new Set(current)
+        next.delete(id)
+        return next
+      })
+    }, 280)
   }
 
   const initials = user?.name
@@ -104,14 +117,20 @@ export function Navbar({ onMenuClick }) {
                   </div>
                 </div>
                 {items.length ? items.slice(0, 6).map((item) => (
-                  <div key={item.id} className="flex items-start gap-2 border-t border-slate-200 bg-white py-3 dark:border-slate-700 dark:bg-slate-900">
+                  <div
+                    key={item.id}
+                    className={cn(
+                      'flex items-start gap-2 border-t border-slate-200 bg-white py-3 dark:border-slate-700 dark:bg-slate-900',
+                      deletingNotificationIds.has(item.id) && 'animate-notification-remove'
+                    )}
+                  >
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium">{item.title}</p>
                       <p className="text-xs text-slate-500">{item.message}</p>
                     </div>
                     <button
                       type="button"
-                      onClick={() => removeNotification(item.id)}
+                      onClick={() => handleDeleteNotification(item.id)}
                       className="shrink-0 rounded-md p-1 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
                       aria-label={t('Delete notification')}
                       title={t('Delete notification')}
