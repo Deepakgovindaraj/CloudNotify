@@ -17,11 +17,15 @@ export function Navbar({ onMenuClick }) {
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
+  const notificationsRef = useRef(null)
 
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setDropdownOpen(false)
+      }
+      if (notificationsRef.current && !notificationsRef.current.contains(e.target)) {
+        setNotificationsOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -68,35 +72,39 @@ export function Navbar({ onMenuClick }) {
             {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>
 
-          <button
-            onClick={() => {
-              setNotificationsOpen((open) => !open)
-              markAllRead()
-            }}
-            className="relative p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            aria-label="Notifications"
-          >
-            <Bell className="h-5 w-5" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 rounded-full bg-primary-500 px-1 text-[10px] leading-4 text-white ring-2 ring-white dark:ring-slate-900">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </button>
-          {notificationsOpen && (
-            <div className="absolute right-20 top-14 z-50 w-80 glass-card p-3 shadow-xl">
-              <div className="mb-2 flex items-center justify-between">
-                <p className="font-semibold">{t('Notifications')}</p>
-                <button className="text-xs text-primary-600" onClick={markAllRead}>{t('Mark read')}</button>
-              </div>
-              {items.length ? items.slice(0, 6).map((item) => (
-                <div key={item.id} className="border-t border-slate-200 py-2 dark:border-slate-700">
-                  <p className="text-sm font-medium">{item.title}</p>
-                  <p className="text-xs text-slate-500">{item.message}</p>
+          <div className="relative" ref={notificationsRef}>
+            <button
+              onClick={() => {
+                setNotificationsOpen((open) => !open)
+                markAllRead()
+              }}
+              className="relative p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              aria-label="Notifications"
+              aria-expanded={notificationsOpen}
+              aria-haspopup="true"
+            >
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 rounded-full bg-primary-500 px-1 text-[10px] leading-4 text-white ring-2 ring-white dark:ring-slate-900">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+            {notificationsOpen && (
+              <div className="absolute right-0 top-12 z-50 w-80 glass-card p-3 shadow-xl">
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="font-semibold">{t('Notifications')}</p>
+                  <button className="text-xs text-primary-600" onClick={markAllRead}>{t('Mark read')}</button>
                 </div>
-              )) : <p className="py-4 text-center text-sm text-slate-500">{t('No notifications')}</p>}
-            </div>
-          )}
+                {items.length ? items.slice(0, 6).map((item) => (
+                  <div key={item.id} className="border-t border-slate-200 py-2 dark:border-slate-700">
+                    <p className="text-sm font-medium">{item.title}</p>
+                    <p className="text-xs text-slate-500">{item.message}</p>
+                  </div>
+                )) : <p className="py-4 text-center text-sm text-slate-500">{t('No notifications')}</p>}
+              </div>
+            )}
+          </div>
 
           <div className="relative" ref={dropdownRef}>
             <button
