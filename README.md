@@ -15,8 +15,8 @@ A modern, production-ready React frontend for **CloudNotify** — a Serverless M
 - Create notifications with date/time, channels, and recurrence
 - History with search, filter, sort, and pagination
 - Profile and settings pages
-- Mock API layer ready for backend integration
-- AWS Amplify deployment ready (SPA redirects, build config)
+- Cloudflare Pages frontend with a Cloudflare Worker API
+- Cloudflare D1 persistence and scheduled notification delivery
 
 ## Tech Stack
 
@@ -69,12 +69,42 @@ src/
 └── main.jsx
 ```
 
-## Cloudflare Pages Deployment
+## Cloudflare Deployment
+
+### API (Worker + D1)
+
+The backend lives in [`worker/`](./worker). Create a D1 database, set its ID in
+`worker/wrangler.toml`, and run:
+
+```bash
+cd worker
+npm install
+npm run db:migrate:remote
+npx wrangler secret put TELEGRAM_BOT_TOKEN
+npx wrangler secret put TELEGRAM_WEBHOOK_SECRET
+npx wrangler secret put GOOGLE_CLIENT_ID
+npx wrangler secret put GOOGLE_CLIENT_SECRET
+npx wrangler secret put GOOGLE_REFRESH_TOKEN
+npx wrangler secret put GMAIL_SENDER
+npm run deploy
+```
+
+`GMAIL_SENDER` is the Gmail account authorized for the Gmail API. The
+`TELEGRAM_WEBHOOK_SECRET` value must match the secret token configured on the
+Telegram webhook. The Profile page now creates a short-lived, single-use
+Telegram connection code.
+
+The current frontend authentication is a client-side demo flow, so the
+`/telegram/link-code` endpoint requires a bearer token but cannot independently
+verify its email claim. Production deployments should replace the demo auth with
+server-validated sessions before treating account linking as fully verified.
+
+### Frontend (Cloudflare Pages)
 
 1. Connect the repository in the Cloudflare dashboard under **Workers & Pages**.
 2. Select the `dist` output directory and use `npm run build` as the build command.
 3. Configure these variables in the Pages project under **Settings → Environment variables**:
-   - `VITE_API_BASE_URL`: the deployed Cloudflare Worker API URL.
+   - `VITE_API_BASE_URL`: the deployed Worker URL, for example `https://cloudnotify-api.<account>.workers.dev`.
    - `VITE_APP_NAME`: `CloudNotify`.
    - `VITE_GOOGLE_CLIENT_ID`: the Google OAuth web client ID.
 4. Configure the variables for the environment being tested (Production and/or Preview).

@@ -67,8 +67,9 @@ export function ProfilePage() {
   const [errors, setErrors] = useState({})
   const connectTelegram = async () => {
     try {
+      const { code } = await telegramService.createLinkCode(user.email)
       const telegramUrl =
-        `https://t.me/CloudNotifyApps_bot?start=${encodeURIComponent(user.email)}`
+        `https://t.me/CloudNotifyApps_bot?start=${encodeURIComponent(code)}`
   
       window.open(telegramUrl, "_blank")
   

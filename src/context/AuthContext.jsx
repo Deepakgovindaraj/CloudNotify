@@ -5,6 +5,10 @@ import { channelService } from '@/services/channelService'
 const AuthContext = createContext(null)
 const TOKEN_KEY = 'cloudnotify_token'
 
+function telegramIsActive(status) {
+  return Boolean(status.telegramConnected && status.telegramNotificationsEnabled !== false)
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -23,7 +27,7 @@ export function AuthProvider({ children }) {
             setUser({
               ...profile,
               gmailConnected: true,
-              telegramConnected: status.telegramConnected
+              telegramConnected: telegramIsActive(status)
             })
           } catch {
             setUser({
@@ -104,7 +108,7 @@ localStorage.setItem(
           currentUser
             ? {
                 ...currentUser,
-                telegramConnected: status.telegramConnected
+                telegramConnected: telegramIsActive(status)
               }
             : currentUser
         ))
@@ -134,12 +138,18 @@ localStorage.setItem(
   
       setUser((prev) => ({
         ...prev,
-        telegramConnected: status.telegramConnected
+        telegramConnected: telegramIsActive(status)
       }))
     } catch (err) {
       console.error('Failed to load Telegram status', err)
     }
-  }, [user])
+  }, [user?.email])
+
+  useEffect(() => {
+    if (!user?.email) return undefined
+    const interval = window.setInterval(refreshTelegramStatus, 5000)
+    return () => window.clearInterval(interval)
+  }, [user?.email, refreshTelegramStatus])
   return (
     <AuthContext.Provider
     value={{

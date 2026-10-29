@@ -1,0 +1,22 @@
+name = "cloudnotify-api"
+main = "src/index.js"
+compatibility_date = "2026-10-28"
+
+[triggers]
+crons = ["* * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "cloudnotify"
+database_id = "ea7986a5-78d3-4e20-a26c-043a5342877c"
+migrations_dir = "migrations"
+
+[vars]
+APP_ORIGIN = "*"
+APP_TIME_ZONE = "Asia/Kolkata"
+
+# Configure secrets with:
+# wrangler secret put TELEGRAM_BOT_TOKEN
+# wrangler secret put TELEGRAM_WEBHOOK_SECRET
+# wrangler secret put RESEND_API_KEY
+# wrangler secret put MAIL_FROM

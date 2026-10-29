@@ -1,8 +1,8 @@
 import api from './api'
 
 export const telegramService = {
-  async connect(data) {
-    const response = await api.post('/telegram/connect', data)
+  async createLinkCode(email) {
+    const response = await api.post('/telegram/link-code', { email })
     return response.data
   }
 }
