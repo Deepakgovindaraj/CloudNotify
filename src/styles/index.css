@@ -87,9 +87,29 @@
   animation: notification-remove 0.42s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
+.notification-delete-button {
+  transition: transform 0.18s ease, color 0.18s ease, background-color 0.18s ease;
+}
+
+.notification-delete-button:hover {
+  animation: notification-delete-hover 0.38s ease-in-out;
+  transform: scale(1.18);
+}
+
+@keyframes notification-delete-hover {
+  0%, 100% { transform: scale(1.18) translateX(0); }
+  25% { transform: scale(1.18) translateX(-2px) rotate(-8deg); }
+  75% { transform: scale(1.18) translateX(2px) rotate(8deg); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-notification-remove {
     animation-duration: 0.01ms;
+  }
+
+  .notification-delete-button:hover {
+    animation: none;
+    transform: scale(1.1);
   }
 }
 

@@ -138,7 +138,7 @@ export function Navbar({ onMenuClick }) {
                   <div
                     key={item.id}
                     className={cn(
-                      'flex items-start gap-2 border-t border-violet-200/70 bg-gradient-to-r from-violet-50 to-purple-50 py-3 dark:border-violet-900/60 dark:from-violet-950/40 dark:to-purple-950/40',
+                      'flex items-start gap-2 rounded-xl border border-violet-300/60 bg-gradient-to-br from-violet-100 via-indigo-100 to-purple-100 px-3 py-3 shadow-sm shadow-violet-200/50 dark:border-violet-800/70 dark:from-violet-950/80 dark:via-indigo-950/80 dark:to-purple-950/80 dark:shadow-black/20',
                       deletingNotificationIds.has(item.id) && 'animate-notification-remove'
                     )}
                   >
@@ -149,7 +149,7 @@ export function Navbar({ onMenuClick }) {
                     <button
                       type="button"
                       onClick={() => handleDeleteNotification(item.id)}
-                      className="shrink-0 rounded-md p-1 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
+                      className="notification-delete-button shrink-0 rounded-md p-1 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
                       aria-label={t('Delete notification')}
                       title={t('Delete notification')}
                     >
