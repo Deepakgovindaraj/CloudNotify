@@ -65,7 +65,11 @@ export function formatTime(timeStr, locale = 'en-US') {
   const match = String(timeStr || '').match(/^(\d{2}):(\d{2})/)
   if (match) {
     const date = new Date(Date.UTC(1970, 0, 1, Number(match[1]), Number(match[2])))
-    return new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(date)
+    return new Intl.DateTimeFormat(locale, {
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZone: 'UTC',
+    }).format(date)
   }
   return formatNotificationTime(timeStr)
 }

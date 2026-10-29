@@ -1,7 +1,7 @@
 import { Calendar, Clock, Trash2 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { StatusBadge, ChannelBadge } from '@/components/ui/Badge'
-import { formatDate } from '@/utils/formatters'
+import { formatDate, formatTime } from '@/utils/formatters'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 
@@ -56,9 +56,7 @@ export function NotificationCard({ notification, onDelete, compact }) {
         </span>
         <span className="flex items-center gap-1">
           <Clock className="h-3.5 w-3.5" />
-          {new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(
-            new Date(`1970-01-01T${notification.time || '00:00'}:00Z`)
-          )}
+          {formatTime(notification.time, locale)}
         </span>
       </div>
     </article>
