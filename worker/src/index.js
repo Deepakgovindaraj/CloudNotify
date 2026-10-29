@@ -298,7 +298,7 @@ async function sendEmail(env, notification) {
     'MIME-Version: 1.0',
     'Content-Type: text/html; charset=UTF-8',
     '',
-    `<h2>${notification.title}</h2><p>${notification.message}</p>`,
+    `<p>${notification.message}</p>`,
   ].join('\r\n')
   const bytes = new TextEncoder().encode(rawMessage)
   let binary = ''
