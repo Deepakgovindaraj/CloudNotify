@@ -44,6 +44,15 @@ export function NotificationProvider({ children }) {
     })
   }, [])
 
+  const restoreNotification = useCallback((notification) => {
+    setItems((current) => {
+      if (current.some((item) => item.id === notification.id)) return current
+      const next = [notification, ...current].slice(0, 30)
+      localStorage.setItem(storageKey(), JSON.stringify(next))
+      return next
+    })
+  }, [])
+
   const clearAll = useCallback(() => {
     localStorage.removeItem(storageKey())
     setItems([])
@@ -55,8 +64,9 @@ export function NotificationProvider({ children }) {
     addNotification,
     markAllRead,
     removeNotification,
+    restoreNotification,
     clearAll,
-  }), [items, addNotification, markAllRead, removeNotification, clearAll])
+  }), [items, addNotification, markAllRead, removeNotification, restoreNotification, clearAll])
 
   return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>
 }

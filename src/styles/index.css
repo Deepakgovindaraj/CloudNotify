@@ -50,7 +50,7 @@
 @keyframes notification-remove {
   from {
     opacity: 1;
-    max-height: 5rem;
+    max-height: 7rem;
     transform: translateX(0);
   }
   to {
@@ -58,7 +58,7 @@
     max-height: 0;
     padding-top: 0;
     padding-bottom: 0;
-    transform: translateX(1.5rem);
+    transform: translateX(110%) scale(0.94);
   }
 }
 
@@ -84,7 +84,7 @@
 
 .animate-notification-remove {
   overflow: hidden;
-  animation: notification-remove 0.28s ease-in forwards;
+  animation: notification-remove 0.42s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {

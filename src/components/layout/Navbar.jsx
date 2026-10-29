@@ -12,13 +12,15 @@ export function Navbar({ onMenuClick }) {
   const { theme, toggleTheme } = useTheme()
   const { user, logout } = useAuth()
   const { t } = useLanguage()
-  const { items, unreadCount, markAllRead, removeNotification, clearAll } = useAppNotifications()
+  const { items, unreadCount, markAllRead, removeNotification, restoreNotification, clearAll } = useAppNotifications()
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [deletingNotificationIds, setDeletingNotificationIds] = useState(() => new Set())
+  const [undoNotification, setUndoNotification] = useState(null)
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
   const notificationsRef = useRef(null)
+  const undoTimerRef = useRef(null)
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -33,12 +35,18 @@ export function Navbar({ onMenuClick }) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  useEffect(() => () => {
+    if (undoTimerRef.current) window.clearTimeout(undoTimerRef.current)
+  }, [])
+
   const handleLogout = () => {
     logout()
     navigate(ROUTES.AUTH)
   }
 
   const handleDeleteNotification = (id) => {
+    const item = items.find((notification) => notification.id === id)
+    if (!item) return
     setDeletingNotificationIds((current) => new Set(current).add(id))
     window.setTimeout(() => {
       removeNotification(id)
@@ -47,7 +55,17 @@ export function Navbar({ onMenuClick }) {
         next.delete(id)
         return next
       })
-    }, 280)
+      setUndoNotification(item)
+      if (undoTimerRef.current) window.clearTimeout(undoTimerRef.current)
+      undoTimerRef.current = window.setTimeout(() => setUndoNotification(null), 4000)
+    }, 420)
+  }
+
+  const handleUndoNotification = () => {
+    if (!undoNotification) return
+    restoreNotification(undoNotification)
+    setUndoNotification(null)
+    if (undoTimerRef.current) window.clearTimeout(undoTimerRef.current)
   }
 
   const initials = user?.name
@@ -120,7 +138,7 @@ export function Navbar({ onMenuClick }) {
                   <div
                     key={item.id}
                     className={cn(
-                      'flex items-start gap-2 border-t border-slate-200 bg-white py-3 dark:border-slate-700 dark:bg-slate-900',
+                      'flex items-start gap-2 border-t border-violet-200/70 bg-gradient-to-r from-violet-50 to-purple-50 py-3 dark:border-violet-900/60 dark:from-violet-950/40 dark:to-purple-950/40',
                       deletingNotificationIds.has(item.id) && 'animate-notification-remove'
                     )}
                   >
@@ -139,6 +157,18 @@ export function Navbar({ onMenuClick }) {
                     </button>
                   </div>
                 )) : <p className="py-4 text-center text-sm text-slate-500">{t('No notifications')}</p>}
+                {undoNotification && (
+                  <div className="mt-2 flex items-center justify-between gap-3 rounded-xl bg-violet-100 px-3 py-2 text-xs text-violet-900 dark:bg-violet-900/50 dark:text-violet-100">
+                    <span>{t('Notification deleted')}</span>
+                    <button
+                      type="button"
+                      onClick={handleUndoNotification}
+                      className="font-semibold text-violet-700 underline underline-offset-2 hover:text-violet-900 dark:text-violet-200 dark:hover:text-white"
+                    >
+                      {t('Undo')}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
