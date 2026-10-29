@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import { authService } from '@/services/authService'
 import { channelService } from '@/services/channelService'
+import { useAppNotifications } from '@/context/NotificationContext'
+import { useLanguage } from '@/context/LanguageContext'
 
 const AuthContext = createContext(null)
 const TOKEN_KEY = 'cloudnotify_token'
@@ -12,6 +14,19 @@ function telegramIsActive(status) {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const { addNotification } = useAppNotifications()
+  const { language } = useLanguage()
+
+  const notify = useCallback((title, message) => {
+    addNotification({ title, message, language })
+  }, [addNotification, language])
+
+  const welcomeIfFirstLogin = useCallback((email) => {
+    const key = `cloudnotify_welcome_${email}`
+    if (localStorage.getItem(key)) return
+    localStorage.setItem(key, 'true')
+    notify('Welcome to CloudNotify', 'Your account is ready. Schedule your first notification to get started.')
+  }, [notify])
 
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY)
@@ -59,9 +74,10 @@ export function AuthProvider({ children }) {
       ...u,
       gmailConnected: true
     })
-  
+    welcomeIfFirstLogin(u.email)
+    notify('Gmail connected', 'Your Gmail channel is connected and ready.')
     return u
-  }, [])
+  }, [notify, welcomeIfFirstLogin])
 
 
   const register = useCallback(async (data) => {
@@ -76,8 +92,10 @@ localStorage.setItem(
   'currentUser',
   JSON.stringify(u)
 )
+welcomeIfFirstLogin(u.email)
+notify('Gmail connected', 'Your Gmail channel is connected and ready.')
     return u
-  }, [])
+  }, [notify, welcomeIfFirstLogin])
 
   const googleLogin = useCallback(async (googleUser) => {
     localStorage.setItem(
@@ -100,6 +118,8 @@ localStorage.setItem(
       gmailConnected: true,
       telegramConnected: false
     })
+    welcomeIfFirstLogin(googleUser.email)
+    notify('Gmail connected', 'Your Gmail channel is connected and ready.')
 
     channelService
       .getStatus(googleUser.email)
@@ -118,7 +138,7 @@ localStorage.setItem(
       })
 
     return googleUser
-  }, [])
+  }, [notify, welcomeIfFirstLogin])
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY)
@@ -141,14 +161,21 @@ localStorage.setItem(
     try {
       const status = await channelService.getStatus(user.email)
   
-      setUser((prev) => ({
+      setUser((prev) => {
+        const wasConnected = Boolean(prev?.telegramConnected)
+        const isConnected = telegramIsActive(status)
+        if (!wasConnected && isConnected) {
+          notify('Telegram connected', 'Your Telegram channel is connected and ready.')
+        }
+        return {
         ...prev,
-        telegramConnected: telegramIsActive(status)
-      }))
+          telegramConnected: isConnected
+        }
+      })
     } catch (err) {
       console.error('Failed to load Telegram status', err)
     }
-  }, [user?.email])
+  }, [user?.email, notify])
 
   useEffect(() => {
     if (!user?.email) return undefined

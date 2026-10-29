@@ -6,11 +6,14 @@ import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/utils/cn'
 import { ROUTES } from '@/constants/routes'
 import { useLanguage } from '@/context/LanguageContext'
+import { useAppNotifications } from '@/context/NotificationContext'
 
 export function Navbar({ onMenuClick }) {
   const { theme, toggleTheme } = useTheme()
   const { user, logout } = useAuth()
   const { t } = useLanguage()
+  const { items, unreadCount, markAllRead } = useAppNotifications()
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
@@ -66,12 +69,34 @@ export function Navbar({ onMenuClick }) {
           </button>
 
           <button
+            onClick={() => {
+              setNotificationsOpen((open) => !open)
+              markAllRead()
+            }}
             className="relative p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             aria-label="Notifications"
           >
             <Bell className="h-5 w-5" />
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary-500 ring-2 ring-white dark:ring-slate-900" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 rounded-full bg-primary-500 px-1 text-[10px] leading-4 text-white ring-2 ring-white dark:ring-slate-900">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </button>
+          {notificationsOpen && (
+            <div className="absolute right-20 top-14 z-50 w-80 glass-card p-3 shadow-xl">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="font-semibold">{t('Notifications')}</p>
+                <button className="text-xs text-primary-600" onClick={markAllRead}>{t('Mark read')}</button>
+              </div>
+              {items.length ? items.slice(0, 6).map((item) => (
+                <div key={item.id} className="border-t border-slate-200 py-2 dark:border-slate-700">
+                  <p className="text-sm font-medium">{item.title}</p>
+                  <p className="text-xs text-slate-500">{item.message}</p>
+                </div>
+              )) : <p className="py-4 text-center text-sm text-slate-500">{t('No notifications')}</p>}
+            </div>
+          )}
 
           <div className="relative" ref={dropdownRef}>
             <button

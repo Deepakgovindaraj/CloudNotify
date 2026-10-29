@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { notificationService } from '@/services/notificationService'
+import { useAppNotifications } from '@/context/NotificationContext'
+import { useLanguage } from '@/context/LanguageContext'
 
 export function useNotifications() {
   const [notifications, setNotifications] = useState([])
@@ -7,6 +9,8 @@ export function useNotifications() {
   const [activity, setActivity] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const { addNotification } = useAppNotifications()
+  const { t } = useLanguage()
 
   const fetchAll = useCallback(async () => {
     setLoading(true)
@@ -33,6 +37,10 @@ export function useNotifications() {
 
   const createNotification = useCallback(async (data) => {
     const created = await notificationService.create(data)
+    addNotification({
+      title: t('Notification scheduled'),
+      message: `${data.title} is scheduled for ${data.date} at ${data.time}.`,
+    })
     setNotifications((prev) => [created, ...prev])
     if (stats) {
       setStats((s) => ({
@@ -42,7 +50,7 @@ export function useNotifications() {
       }))
     }
     return created
-  }, [stats])
+  }, [stats, addNotification, t])
 
   const deleteNotification = useCallback(async (id) => {
     await notificationService.delete(id)
