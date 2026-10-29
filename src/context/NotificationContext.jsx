@@ -36,12 +36,27 @@ export function NotificationProvider({ children }) {
     })
   }, [])
 
+  const removeNotification = useCallback((id) => {
+    setItems((current) => {
+      const next = current.filter((item) => item.id !== id)
+      localStorage.setItem(storageKey(), JSON.stringify(next))
+      return next
+    })
+  }, [])
+
+  const clearAll = useCallback(() => {
+    localStorage.removeItem(storageKey())
+    setItems([])
+  }, [])
+
   const value = useMemo(() => ({
     items,
     unreadCount: items.filter((item) => !item.read).length,
     addNotification,
     markAllRead,
-  }), [items, addNotification, markAllRead])
+    removeNotification,
+    clearAll,
+  }), [items, addNotification, markAllRead, removeNotification, clearAll])
 
   return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>
 }

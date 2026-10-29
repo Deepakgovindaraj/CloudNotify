@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Menu, Bell, Sun, Moon, LogOut, User, Settings, ChevronDown } from 'lucide-react'
+import { Menu, Bell, Sun, Moon, LogOut, User, Settings, ChevronDown, Trash2 } from 'lucide-react'
 import { useTheme } from '@/context/ThemeContext'
 import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/utils/cn'
@@ -12,7 +12,7 @@ export function Navbar({ onMenuClick }) {
   const { theme, toggleTheme } = useTheme()
   const { user, logout } = useAuth()
   const { t } = useLanguage()
-  const { items, unreadCount, markAllRead } = useAppNotifications()
+  const { items, unreadCount, markAllRead, removeNotification, clearAll } = useAppNotifications()
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -91,15 +91,33 @@ export function Navbar({ onMenuClick }) {
               )}
             </button>
             {notificationsOpen && (
-              <div className="absolute right-0 top-12 z-50 w-80 glass-card p-3 shadow-xl">
-                <div className="mb-2 flex items-center justify-between">
+              <div className="absolute right-0 top-12 z-50 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+                <div className="mb-2 flex items-center justify-between gap-3">
                   <p className="font-semibold">{t('Notifications')}</p>
-                  <button className="text-xs text-primary-600" onClick={markAllRead}>{t('Mark read')}</button>
+                  <div className="flex items-center gap-3">
+                    <button className="text-xs text-primary-600" onClick={markAllRead}>{t('Mark read')}</button>
+                    {items.length > 0 && (
+                      <button className="text-xs text-red-600 hover:text-red-700" onClick={clearAll}>
+                        {t('Clear all')}
+                      </button>
+                    )}
+                  </div>
                 </div>
                 {items.length ? items.slice(0, 6).map((item) => (
-                  <div key={item.id} className="border-t border-slate-200 py-2 dark:border-slate-700">
-                    <p className="text-sm font-medium">{item.title}</p>
-                    <p className="text-xs text-slate-500">{item.message}</p>
+                  <div key={item.id} className="flex items-start gap-2 border-t border-slate-200 bg-white py-3 dark:border-slate-700 dark:bg-slate-900">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">{item.title}</p>
+                      <p className="text-xs text-slate-500">{item.message}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeNotification(item.id)}
+                      className="shrink-0 rounded-md p-1 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
+                      aria-label={t('Delete notification')}
+                      title={t('Delete notification')}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                 )) : <p className="py-4 text-center text-sm text-slate-500">{t('No notifications')}</p>}
               </div>
