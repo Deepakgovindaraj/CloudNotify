@@ -21,7 +21,8 @@ function ConnectionCard({
   connected,
   icon: Icon,
   color,
-  onClick
+  onClick,
+  t
 }) {
   return (
     <div className="glass-card p-5 flex items-center justify-between">
@@ -155,6 +156,7 @@ export function ProfilePage() {
   connected={user?.gmailConnected}
   icon={Mail}
   color="bg-gradient-to-br from-rose-500 to-rose-600"
+  t={t}
 />
         <ConnectionCard
           title="Telegram"
@@ -162,6 +164,7 @@ export function ProfilePage() {
           icon={Send}
           color="bg-gradient-to-br from-sky-500 to-sky-600"
           onClick={connectTelegram}
+          t={t}
         />
       </div>
 
