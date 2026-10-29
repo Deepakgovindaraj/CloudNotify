@@ -212,7 +212,18 @@ async function handleTelegramWebhook(request, env) {
 
   if (parsed.command === 'start') {
     if (!parsed.argument) {
-      await sendTelegramMessage(env, chatId, 'Open CloudNotify Profile and choose Connect Telegram to get a secure, short-lived connection link.')
+      await sendTelegramMessage(
+        env,
+        chatId,
+        'Welcome to CloudNotify!\n\n' +
+        'CloudNotify helps you schedule reminders and receive them through Telegram and Gmail.\n\n' +
+        'To connect your account, open CloudNotify, go to Profile, select Connect Telegram, and then press START here using the generated link.\n\n' +
+        'Available commands:\n' +
+        '/help — Show command instructions\n' +
+        '/status — Check your connection and notification status\n' +
+        '/stop — Disable Telegram notifications\n' +
+        '/resume — Re-enable Telegram notifications'
+      )
       return telegramResponse('ok')
     }
     const codeHash = await hashValue(parsed.argument)
