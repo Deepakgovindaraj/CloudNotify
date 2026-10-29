@@ -134,29 +134,33 @@ export function Navbar({ onMenuClick }) {
                     )}
                   </div>
                 </div>
-                {items.length ? items.slice(0, 6).map((item) => (
-                  <div
-                    key={item.id}
-                    className={cn(
-                      'flex items-start gap-2 rounded-xl border border-violet-300/60 bg-gradient-to-br from-violet-100 via-indigo-100 to-purple-100 px-3 py-3 shadow-sm shadow-violet-200/50 dark:border-violet-800/70 dark:from-violet-950/80 dark:via-indigo-950/80 dark:to-purple-950/80 dark:shadow-black/20',
-                      deletingNotificationIds.has(item.id) && 'animate-notification-remove'
-                    )}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">{item.title}</p>
-                      <p className="text-xs text-slate-500">{item.message}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteNotification(item.id)}
-                      className="notification-delete-button shrink-0 rounded-md p-1 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
-                      aria-label={t('Delete notification')}
-                      title={t('Delete notification')}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                {items.length ? (
+                  <div className="space-y-2">
+                    {items.slice(0, 6).map((item) => (
+                      <div
+                        key={item.id}
+                        className={cn(
+                          'flex items-start gap-2 rounded-xl border border-violet-300/60 bg-gradient-to-br from-violet-100 via-indigo-100 to-purple-100 px-3 py-3 shadow-sm shadow-violet-200/50 dark:border-violet-800/70 dark:from-violet-950/80 dark:via-indigo-950/80 dark:to-purple-950/80 dark:shadow-black/20',
+                          deletingNotificationIds.has(item.id) && 'animate-notification-remove'
+                        )}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium">{item.title}</p>
+                          <p className="text-xs text-slate-500">{item.message}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteNotification(item.id)}
+                          className="notification-delete-button shrink-0 rounded-md p-1 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
+                          aria-label={t('Delete notification')}
+                          title={t('Delete notification')}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                )) : <p className="py-4 text-center text-sm text-slate-500">{t('No notifications')}</p>}
+                ) : <p className="py-4 text-center text-sm text-slate-500">{t('No notifications')}</p>}
                 {undoNotification && (
                   <div className="mt-2 flex items-center justify-between gap-3 rounded-xl bg-violet-100 px-3 py-2 text-xs text-violet-900 dark:bg-violet-900/50 dark:text-violet-100">
                     <span>{t('Notification deleted')}</span>
