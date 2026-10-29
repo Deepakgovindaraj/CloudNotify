@@ -15,7 +15,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const { addNotification } = useAppNotifications()
-  const { language } = useLanguage()
+  const { language, t } = useLanguage()
 
   const notify = useCallback((title, message) => {
     addNotification({ title, message, language })
@@ -166,6 +166,8 @@ notify('Gmail connected', 'Your Gmail channel is connected and ready.')
         const isConnected = telegramIsActive(status)
         if (!wasConnected && isConnected) {
           notify('Telegram connected', 'Your Telegram channel is connected and ready.')
+        } else if (wasConnected && !isConnected) {
+          notify(t('Telegram disconnected'), t('Your Telegram channel has been disconnected.'))
         }
         return {
         ...prev,
@@ -175,7 +177,7 @@ notify('Gmail connected', 'Your Gmail channel is connected and ready.')
     } catch (err) {
       console.error('Failed to load Telegram status', err)
     }
-  }, [user?.email, notify])
+  }, [user?.email, notify, t])
 
   useEffect(() => {
     if (!user?.email) return undefined

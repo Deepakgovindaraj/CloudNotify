@@ -29,6 +29,7 @@ const translations = {
     'Welcome to CloudNotify': 'Welcome to CloudNotify', 'Your account is ready. Schedule your first notification to get started.': 'Your account is ready. Schedule your first notification to get started.',
     'Gmail connected': 'Gmail connected', 'Your Gmail channel is connected and ready.': 'Your Gmail channel is connected and ready.',
     'Telegram connected': 'Telegram connected', 'Your Telegram channel is connected and ready.': 'Your Telegram channel is connected and ready.',
+    'Telegram disconnected': 'Telegram disconnected', 'Your Telegram channel has been disconnected.': 'Your Telegram channel has been disconnected.',
     'Notification scheduled': 'Notification scheduled',
   },
   es: {
@@ -55,6 +56,7 @@ const translations = {
     'Welcome to CloudNotify': 'Bienvenido a CloudNotify', 'Your account is ready. Schedule your first notification to get started.': 'Tu cuenta está lista. Programa tu primera notificación para comenzar.',
     'Gmail connected': 'Gmail conectado', 'Your Gmail channel is connected and ready.': 'Tu canal de Gmail está conectado y listo.',
     'Telegram connected': 'Telegram conectado', 'Your Telegram channel is connected and ready.': 'Tu canal de Telegram está conectado y listo.',
+    'Telegram disconnected': 'Telegram desconectado', 'Your Telegram channel has been disconnected.': 'Tu canal de Telegram ha sido desconectado.',
     'Notification scheduled': 'Notificación programada',
   },
   fr: {
@@ -81,6 +83,7 @@ const translations = {
     'Welcome to CloudNotify': 'Bienvenue sur CloudNotify', 'Your account is ready. Schedule your first notification to get started.': 'Votre compte est prêt. Planifiez votre première notification pour commencer.',
     'Gmail connected': 'Gmail connecté', 'Your Gmail channel is connected and ready.': 'Votre canal Gmail est connecté et prêt.',
     'Telegram connected': 'Telegram connecté', 'Your Telegram channel is connected and ready.': 'Votre canal Telegram est connecté et prêt.',
+    'Telegram disconnected': 'Telegram déconnecté', 'Your Telegram channel has been disconnected.': 'Votre canal Telegram a été déconnecté.',
     'Notification scheduled': 'Notification planifiée',
   },
   de: {
@@ -107,6 +110,7 @@ const translations = {
     'Welcome to CloudNotify': 'Willkommen bei CloudNotify', 'Your account is ready. Schedule your first notification to get started.': 'Dein Konto ist bereit. Plane deine erste Benachrichtigung.',
     'Gmail connected': 'Gmail verbunden', 'Your Gmail channel is connected and ready.': 'Dein Gmail-Kanal ist verbunden und bereit.',
     'Telegram connected': 'Telegram verbunden', 'Your Telegram channel is connected and ready.': 'Dein Telegram-Kanal ist verbunden und bereit.',
+    'Telegram disconnected': 'Telegram getrennt', 'Your Telegram channel has been disconnected.': 'Dein Telegram-Kanal wurde getrennt.',
     'Notification scheduled': 'Benachrichtigung geplant',
   },
   hi: {
@@ -133,6 +137,7 @@ const translations = {
     'Welcome to CloudNotify': 'CloudNotify में आपका स्वागत है', 'Your account is ready. Schedule your first notification to get started.': 'आपका खाता तैयार है। शुरू करने के लिए पहली सूचना अनुसूचित करें।',
     'Gmail connected': 'Gmail कनेक्ट है', 'Your Gmail channel is connected and ready.': 'आपका Gmail चैनल कनेक्ट और तैयार है।',
     'Telegram connected': 'Telegram कनेक्ट है', 'Your Telegram channel is connected and ready.': 'आपका Telegram चैनल कनेक्ट और तैयार है।',
+    'Telegram disconnected': 'Telegram डिस्कनेक्ट है', 'Your Telegram channel has been disconnected.': 'आपका Telegram चैनल डिस्कनेक्ट हो गया है।',
     'Notification scheduled': 'सूचना अनुसूचित है',
   },
 }
