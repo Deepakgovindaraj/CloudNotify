@@ -44,18 +44,34 @@ export function formatNotificationTime(timeStr) {
   return trimmed
 }
 
-export function formatDate(dateStr) {
+export function formatDate(dateStr, timeZone, locale = 'en-US') {
   if (!dateStr) return '—'
+  if (timeZone) {
+    const parsed = new Date(`${dateStr}T12:00:00Z`)
+    if (!Number.isNaN(parsed.getTime())) {
+      return new Intl.DateTimeFormat(locale, {
+        timeZone,
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }).format(parsed)
+    }
+  }
   const d = typeof dateStr === 'string' ? parseISO(dateStr) : dateStr
   return isValid(d) ? format(d, 'MMM d, yyyy') : dateStr
 }
 
-export function formatTime(timeStr) {
+export function formatTime(timeStr, locale = 'en-US') {
+  const match = String(timeStr || '').match(/^(\d{2}):(\d{2})/)
+  if (match) {
+    const date = new Date(Date.UTC(1970, 0, 1, Number(match[1]), Number(match[2])))
+    return new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(date)
+  }
   return formatNotificationTime(timeStr)
 }
 
-export function formatDateTime(dateStr, timeStr) {
-  return `${formatDate(dateStr)} at ${formatTime(timeStr)}`
+export function formatDateTime(dateStr, timeStr, timeZone, locale = 'en-US') {
+  return `${formatDate(dateStr, timeZone, locale)} ${formatTime(timeStr, locale)}`
 }
 
 export function capitalize(str) {

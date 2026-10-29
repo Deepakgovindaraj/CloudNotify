@@ -14,6 +14,7 @@ import { Toggle } from '@/components/ui/Toggle'
 import { Modal } from '@/components/ui/Modal'
 import { cn } from '@/utils/cn'
 import { telegramService } from '@/services/telegramService'
+import { useLanguage } from '@/context/LanguageContext'
 
 function ConnectionCard({
   title,
@@ -31,7 +32,7 @@ function ConnectionCard({
         <div>
           <p className="font-medium">{title}</p>
           <p className="text-sm text-slate-500">
-            {connected ? 'Connected and ready' : 'Not connected'}
+            {connected ? t('Connected and ready') : t('Not connected')}
           </p>
         </div>
       </div>
@@ -46,7 +47,7 @@ function ConnectionCard({
           size="sm"
           onClick={onClick}
         >
-          {connected ? 'Disconnect' : 'Connect'}
+          {connected ? t('Disconnect') : t('Connect')}
         </Button>
       </div>
     </div>
@@ -59,6 +60,7 @@ export function ProfilePage() {
     updateUser,
     refreshTelegramStatus
   } = useAuth()
+  const { t } = useLanguage()
   const [pictureError, setPictureError] = useState(false)
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' })
   const [prefs, setPrefs] = useState(user?.preferences || {})

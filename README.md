@@ -89,6 +89,10 @@ npx wrangler secret put GMAIL_SENDER
 npm run deploy
 ```
 
+Run `npm run db:migrate:remote` again after pulling new migration files. The
+notification timezone migration stores each schedule's IANA timezone, so new
+notifications run in the timezone selected in Settings.
+
 `GMAIL_SENDER` is the Gmail account authorized for the Gmail API. The
 `TELEGRAM_WEBHOOK_SECRET` value must match the secret token configured on the
 Telegram webhook. The Profile page now creates a short-lived, single-use

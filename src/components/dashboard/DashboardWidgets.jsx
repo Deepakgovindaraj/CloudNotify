@@ -2,19 +2,21 @@ import { Bell, Send, Mail, Layers, Activity } from 'lucide-react'
 import { NotificationCard } from '@/components/notifications/NotificationCard'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/utils/cn'
+import { useLanguage } from '@/context/LanguageContext'
 
 export function WelcomeCard({ name }) {
+  const { t } = useLanguage()
   return (
     <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 via-primary-500 to-accent-500 p-8 text-white shadow-xl shadow-primary-500/25 animate-slide-up">
       <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
       <div className="absolute -bottom-4 -left-4 h-32 w-32 rounded-full bg-accent-400/20 blur-xl" />
       <div className="relative">
-        <p className="text-primary-100 text-sm font-medium">Welcome back</p>
+        <p className="text-primary-100 text-sm font-medium">{t('Welcome back')}</p>
         <h1 className="font-display mt-1 text-2xl md:text-3xl font-bold">
           Hello, {name?.split(' ')[0] || 'there'} 👋
         </h1>
         <p className="mt-2 text-primary-100/90 text-sm max-w-md">
-          Manage your scheduled notifications across Telegram and Gmail from one dashboard.
+          {t('Manage your scheduled notifications across Telegram and Gmail from one dashboard.')}
         </p>
       </div>
     </div>
@@ -22,11 +24,12 @@ export function WelcomeCard({ name }) {
 }
 
 export function ChannelDistribution({ data }) {
+  const { t } = useLanguage()
   const icons = { Telegram: Send, Gmail: Mail, Both: Layers }
 
   return (
     <div className="glass-card p-6 animate-slide-up">
-      <h3 className="font-display font-semibold mb-4">Channel Distribution</h3>
+      <h3 className="font-display font-semibold mb-4">{t('Channel Distribution')}</h3>
       <div className="space-y-4">
         {data?.map((item) => {
           const Icon = icons[item.channel] || Bell
@@ -54,6 +57,7 @@ export function ChannelDistribution({ data }) {
 }
 
 export function RecentActivity({ activities }) {
+  const { t } = useLanguage()
   const typeColors = {
     success: 'bg-emerald-500',
     error: 'bg-red-500',
@@ -64,7 +68,7 @@ export function RecentActivity({ activities }) {
     <div className="glass-card p-6 animate-slide-up">
       <h3 className="font-display font-semibold mb-4 flex items-center gap-2">
         <Activity className="h-5 w-5 text-primary-500" />
-        Recent Activity
+        {t('Recent Activity')}
       </h3>
       <ul className="space-y-4">
         {activities?.map((act) => (
@@ -83,13 +87,14 @@ export function RecentActivity({ activities }) {
 }
 
 export function UpcomingNotifications({ notifications }) {
+  const { t } = useLanguage()
   const upcoming = notifications?.filter(
     (n) => n.status?.toUpperCase() === 'PENDING'
   ).slice(0, 3)
 
   return (
     <div className="glass-card p-6 animate-slide-up">
-      <h3 className="font-display font-semibold mb-4">Upcoming Notifications</h3>
+      <h3 className="font-display font-semibold mb-4">{t('Upcoming Notifications')}</h3>
       {upcoming?.length ? (
         <div className="space-y-3">
           {upcoming.map((n) => (
@@ -104,11 +109,12 @@ export function UpcomingNotifications({ notifications }) {
 }
 
 export function WeeklyChart({ data }) {
+  const { t } = useLanguage()
   const max = Math.max(...(data?.map((d) => d.sent + d.failed) || [1]))
 
   return (
     <div className="glass-card p-6 animate-slide-up">
-      <h3 className="font-display font-semibold mb-4">Notification Statistics</h3>
+      <h3 className="font-display font-semibold mb-4">{t('Notification Statistics')}</h3>
       <div className="flex items-end justify-between gap-2 h-40">
         {data?.map((d) => {
           const total = d.sent + d.failed
@@ -136,13 +142,12 @@ export function WeeklyChart({ data }) {
       </div>
       <div className="mt-4 flex gap-4 text-xs text-slate-500">
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-primary-500" /> Sent
+        <span className="h-2 w-2 rounded-full bg-primary-500" /> {t('Sent')}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-red-400" /> Failed
+          <span className="h-2 w-2 rounded-full bg-red-400" /> {t('Failed')}
         </span>
       </div>
     </div>
   )
 }
-

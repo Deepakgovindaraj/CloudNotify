@@ -1,0 +1,139 @@
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+
+const translations = {
+  en: {
+    Dashboard: 'Dashboard', 'Create Notification': 'Create Notification', History: 'History',
+    Profile: 'Profile', Settings: 'Settings', 'Pro Tip': 'Pro Tip',
+    'Connect both channels for maximum reach.': 'Connect both channels for maximum reach.',
+    'Welcome back': 'Welcome back', 'Manage your scheduled notifications across Telegram and Gmail from one dashboard.': 'Manage your scheduled notifications across Telegram and Gmail from one dashboard.',
+    'Total Notifications': 'Total Notifications', Scheduled: 'Scheduled', Sent: 'Sent', Failed: 'Failed',
+    'Create Notification': 'Create Notification', 'View History': 'View History', 'Profile Settings': 'Profile Settings',
+    'Recent Notifications': 'Recent Notifications', 'View all': 'View all', 'Channel Distribution': 'Channel Distribution',
+    'Recent Activity': 'Recent Activity', 'Upcoming Notifications': 'Upcoming Notifications', 'Notification Statistics': 'Notification Statistics',
+    'Notification History': 'Notification History', 'View and manage all scheduled notifications.': 'View and manage all scheduled notifications.',
+    'Search notifications...': 'Search notifications...', 'All Statuses': 'All Statuses', Title: 'Title', Message: 'Message',
+    Channel: 'Channel', Date: 'Date', Time: 'Time', Status: 'Status', Previous: 'Previous', Next: 'Next',
+    'Delete Notification?': 'Delete Notification?', Delete: 'Delete', 'No notifications yet': 'No notifications yet',
+    'Schedule your first notification to get started with CloudNotify.': 'Schedule your first notification to get started with CloudNotify.',
+    'No results found': 'No results found', 'Try adjusting your search or filter criteria.': 'Try adjusting your search or filter criteria.',
+    'Customize your CloudNotify experience.': 'Customize your CloudNotify experience.', Appearance: 'Appearance',
+    Light: 'Light', Dark: 'Dark', Regional: 'Regional', 'Time Zone': 'Time Zone', Language: 'Language',
+    Account: 'Account', 'Two-Factor Authentication': 'Two-Factor Authentication',
+    'Session Notifications': 'Session Notifications', 'Delete Account': 'Delete Account',
+    'Schedule a reminder via Telegram, Gmail, or both.': 'Schedule a reminder via Telegram, Gmail, or both.',
+    'Notification Title': 'Notification Title', 'Message': 'Message', 'Recipient Email': 'Recipient Email',
+    'Uses your local timezone': 'Uses your local timezone', 'Selected': 'Selected', 'Connect Telegram': 'Connect Telegram',
+    'Connected and ready': 'Connected and ready', 'Not connected': 'Not connected', Connect: 'Connect', Disconnect: 'Disconnect',
+    'Gmail': 'Gmail', 'Telegram': 'Telegram', Both: 'Both', 'Log out': 'Log out',
+  },
+  es: {
+    Dashboard: 'Panel', 'Create Notification': 'Crear notificación', History: 'Historial', Profile: 'Perfil', Settings: 'Configuración',
+    'Pro Tip': 'Consejo', 'Connect both channels for maximum reach.': 'Conecta ambos canales para mayor alcance.',
+    'Welcome back': 'Bienvenido de nuevo', 'Manage your scheduled notifications across Telegram and Gmail from one dashboard.': 'Administra tus notificaciones programadas de Telegram y Gmail desde un solo panel.',
+    'Total Notifications': 'Notificaciones totales', Scheduled: 'Programadas', Sent: 'Enviadas', Failed: 'Fallidas',
+    'View History': 'Ver historial', 'Profile Settings': 'Configuración del perfil', 'Recent Notifications': 'Notificaciones recientes',
+    'View all': 'Ver todo', 'Channel Distribution': 'Distribución por canal', 'Recent Activity': 'Actividad reciente',
+    'Upcoming Notifications': 'Próximas notificaciones', 'Notification Statistics': 'Estadísticas de notificaciones',
+    'Notification History': 'Historial de notificaciones', 'View and manage all scheduled notifications.': 'Consulta y administra tus notificaciones programadas.',
+    'Search notifications...': 'Buscar notificaciones...', 'All Statuses': 'Todos los estados', Title: 'Título', Message: 'Mensaje',
+    Channel: 'Canal', Date: 'Fecha', Time: 'Hora', Status: 'Estado', Previous: 'Anterior', Next: 'Siguiente',
+    'Delete Notification?': '¿Eliminar notificación?', Delete: 'Eliminar', 'No notifications yet': 'Aún no hay notificaciones',
+    'Schedule your first notification to get started with CloudNotify.': 'Programa tu primera notificación para comenzar con CloudNotify.',
+    'No results found': 'No se encontraron resultados', 'Try adjusting your search or filter criteria.': 'Intenta ajustar tu búsqueda o filtros.',
+    'Customize your CloudNotify experience.': 'Personaliza tu experiencia de CloudNotify.', Appearance: 'Apariencia', Light: 'Claro', Dark: 'Oscuro',
+    Regional: 'Regional', 'Time Zone': 'Zona horaria', Language: 'Idioma', Account: 'Cuenta',
+    'Two-Factor Authentication': 'Autenticación de dos factores', 'Session Notifications': 'Notificaciones de sesión', 'Delete Account': 'Eliminar cuenta',
+    'Schedule a reminder via Telegram, Gmail, or both.': 'Programa un recordatorio por Telegram, Gmail o ambos.',
+    'Notification Title': 'Título de la notificación', 'Recipient Email': 'Correo del destinatario', 'Uses your local timezone': 'Usa tu zona horaria local',
+    'Connected and ready': 'Conectado y listo', 'Not connected': 'No conectado', Connect: 'Conectar', Disconnect: 'Desconectar', Both: 'Ambos', 'Log out': 'Cerrar sesión',
+  },
+  fr: {
+    Dashboard: 'Tableau de bord', 'Create Notification': 'Créer une notification', History: 'Historique', Profile: 'Profil', Settings: 'Paramètres',
+    'Pro Tip': 'Conseil', 'Connect both channels for maximum reach.': 'Connectez les deux canaux pour une portée maximale.',
+    'Welcome back': 'Bon retour', 'Manage your scheduled notifications across Telegram and Gmail from one dashboard.': 'Gérez vos notifications Telegram et Gmail depuis un seul tableau de bord.',
+    'Total Notifications': 'Notifications totales', Scheduled: 'Planifiées', Sent: 'Envoyées', Failed: 'Échouées',
+    'View History': 'Voir l’historique', 'Profile Settings': 'Paramètres du profil', 'Recent Notifications': 'Notifications récentes',
+    'View all': 'Tout voir', 'Channel Distribution': 'Répartition des canaux', 'Recent Activity': 'Activité récente',
+    'Upcoming Notifications': 'Notifications à venir', 'Notification Statistics': 'Statistiques des notifications',
+    'Notification History': 'Historique des notifications', 'View and manage all scheduled notifications.': 'Consultez et gérez vos notifications planifiées.',
+    'Search notifications...': 'Rechercher des notifications...', 'All Statuses': 'Tous les statuts', Title: 'Titre', Message: 'Message',
+    Channel: 'Canal', Date: 'Date', Time: 'Heure', Status: 'Statut', Previous: 'Précédent', Next: 'Suivant',
+    'Delete Notification?': 'Supprimer la notification ?', Delete: 'Supprimer', 'No notifications yet': 'Aucune notification',
+    'Schedule your first notification to get started with CloudNotify.': 'Planifiez votre première notification pour commencer avec CloudNotify.',
+    'No results found': 'Aucun résultat', 'Try adjusting your search or filter criteria.': 'Essayez d’ajuster votre recherche ou vos filtres.',
+    'Customize your CloudNotify experience.': 'Personnalisez votre expérience CloudNotify.', Appearance: 'Apparence', Light: 'Clair', Dark: 'Sombre',
+    Regional: 'Régional', 'Time Zone': 'Fuseau horaire', Language: 'Langue', Account: 'Compte',
+    'Two-Factor Authentication': 'Authentification à deux facteurs', 'Session Notifications': 'Notifications de session', 'Delete Account': 'Supprimer le compte',
+    'Schedule a reminder via Telegram, Gmail, or both.': 'Planifiez un rappel via Telegram, Gmail ou les deux.',
+    'Notification Title': 'Titre de la notification', 'Recipient Email': 'E-mail du destinataire', 'Uses your local timezone': 'Utilise votre fuseau horaire local',
+    'Connected and ready': 'Connecté et prêt', 'Not connected': 'Non connecté', Connect: 'Connecter', Disconnect: 'Déconnecter', Both: 'Les deux', 'Log out': 'Se déconnecter',
+  },
+  de: {
+    Dashboard: 'Dashboard', 'Create Notification': 'Benachrichtigung erstellen', History: 'Verlauf', Profile: 'Profil', Settings: 'Einstellungen',
+    'Pro Tip': 'Tipp', 'Connect both channels for maximum reach.': 'Verbinde beide Kanäle für maximale Reichweite.',
+    'Welcome back': 'Willkommen zurück', 'Manage your scheduled notifications across Telegram and Gmail from one dashboard.': 'Verwalte geplante Telegram- und Gmail-Benachrichtigungen in einem Dashboard.',
+    'Total Notifications': 'Benachrichtigungen insgesamt', Scheduled: 'Geplant', Sent: 'Gesendet', Failed: 'Fehlgeschlagen',
+    'View History': 'Verlauf anzeigen', 'Profile Settings': 'Profileinstellungen', 'Recent Notifications': 'Letzte Benachrichtigungen',
+    'View all': 'Alle anzeigen', 'Channel Distribution': 'Kanalverteilung', 'Recent Activity': 'Letzte Aktivitäten',
+    'Upcoming Notifications': 'Anstehende Benachrichtigungen', 'Notification Statistics': 'Benachrichtigungsstatistiken',
+    'Notification History': 'Benachrichtigungsverlauf', 'View and manage all scheduled notifications.': 'Zeige und verwalte alle geplanten Benachrichtigungen.',
+    'Search notifications...': 'Benachrichtigungen suchen...', 'All Statuses': 'Alle Statuswerte', Title: 'Titel', Message: 'Nachricht',
+    Channel: 'Kanal', Date: 'Datum', Time: 'Zeit', Status: 'Status', Previous: 'Zurück', Next: 'Weiter',
+    'Delete Notification?': 'Benachrichtigung löschen?', Delete: 'Löschen', 'No notifications yet': 'Noch keine Benachrichtigungen',
+    'Schedule your first notification to get started with CloudNotify.': 'Plane deine erste Benachrichtigung, um mit CloudNotify zu beginnen.',
+    'No results found': 'Keine Ergebnisse', 'Try adjusting your search or filter criteria.': 'Passe deine Suche oder Filter an.',
+    'Customize your CloudNotify experience.': 'Passe dein CloudNotify-Erlebnis an.', Appearance: 'Darstellung', Light: 'Hell', Dark: 'Dunkel',
+    Regional: 'Regional', 'Time Zone': 'Zeitzone', Language: 'Sprache', Account: 'Konto',
+    'Two-Factor Authentication': 'Zwei-Faktor-Authentifizierung', 'Session Notifications': 'Sitzungsbenachrichtigungen', 'Delete Account': 'Konto löschen',
+    'Schedule a reminder via Telegram, Gmail, or both.': 'Plane eine Erinnerung über Telegram, Gmail oder beide.',
+    'Notification Title': 'Benachrichtigungstitel', 'Recipient Email': 'Empfänger-E-Mail', 'Uses your local timezone': 'Verwendet deine lokale Zeitzone',
+    'Connected and ready': 'Verbunden und bereit', 'Not connected': 'Nicht verbunden', Connect: 'Verbinden', Disconnect: 'Trennen', Both: 'Beide', 'Log out': 'Abmelden',
+  },
+  hi: {
+    Dashboard: 'डैशबोर्ड', 'Create Notification': 'सूचना बनाएँ', History: 'इतिहास', Profile: 'प्रोफ़ाइल', Settings: 'सेटिंग्स',
+    'Pro Tip': 'सुझाव', 'Connect both channels for maximum reach.': 'अधिक पहुँच के लिए दोनों चैनल कनेक्ट करें।',
+    'Welcome back': 'वापसी पर स्वागत है', 'Manage your scheduled notifications across Telegram and Gmail from one dashboard.': 'एक ही डैशबोर्ड से Telegram और Gmail सूचनाओं को प्रबंधित करें।',
+    'Total Notifications': 'कुल सूचनाएँ', Scheduled: 'अनुसूचित', Sent: 'भेजी गई', Failed: 'विफल',
+    'View History': 'इतिहास देखें', 'Profile Settings': 'प्रोफ़ाइल सेटिंग्स', 'Recent Notifications': 'हाल की सूचनाएँ',
+    'View all': 'सभी देखें', 'Channel Distribution': 'चैनल वितरण', 'Recent Activity': 'हाल की गतिविधि',
+    'Upcoming Notifications': 'आगामी सूचनाएँ', 'Notification Statistics': 'सूचना आँकड़े',
+    'Notification History': 'सूचना इतिहास', 'View and manage all scheduled notifications.': 'सभी अनुसूचित सूचनाएँ देखें और प्रबंधित करें।',
+    'Search notifications...': 'सूचनाएँ खोजें...', 'All Statuses': 'सभी स्थितियाँ', Title: 'शीर्षक', Message: 'संदेश',
+    Channel: 'चैनल', Date: 'तारीख', Time: 'समय', Status: 'स्थिति', Previous: 'पिछला', Next: 'अगला',
+    'Delete Notification?': 'सूचना हटाएँ?', Delete: 'हटाएँ', 'No notifications yet': 'अभी कोई सूचना नहीं',
+    'Schedule your first notification to get started with CloudNotify.': 'CloudNotify शुरू करने के लिए अपनी पहली सूचना अनुसूचित करें।',
+    'No results found': 'कोई परिणाम नहीं मिला', 'Try adjusting your search or filter criteria.': 'अपनी खोज या फ़िल्टर बदलकर देखें।',
+    'Customize your CloudNotify experience.': 'अपने CloudNotify अनुभव को अनुकूलित करें।', Appearance: 'दिखावट', Light: 'हल्का', Dark: 'गहरा',
+    Regional: 'क्षेत्रीय', 'Time Zone': 'समय क्षेत्र', Language: 'भाषा', Account: 'खाता',
+    'Two-Factor Authentication': 'दो-चरण प्रमाणीकरण', 'Session Notifications': 'सत्र सूचनाएँ', 'Delete Account': 'खाता हटाएँ',
+    'Schedule a reminder via Telegram, Gmail, or both.': 'Telegram, Gmail या दोनों के माध्यम से रिमाइंडर अनुसूचित करें।',
+    'Notification Title': 'सूचना शीर्षक', 'Recipient Email': 'प्राप्तकर्ता ईमेल', 'Uses your local timezone': 'आपके स्थानीय समय क्षेत्र का उपयोग करता है',
+    'Connected and ready': 'कनेक्ट और तैयार', 'Not connected': 'कनेक्ट नहीं है', Connect: 'कनेक्ट करें', Disconnect: 'डिस्कनेक्ट करें', Both: 'दोनों', 'Log out': 'लॉग आउट',
+  },
+}
+
+const LanguageContext = createContext(null)
+
+export function LanguageProvider({ children }) {
+  const [language, setLanguageState] = useState(() => localStorage.getItem('cloudnotify_language') || 'en')
+  useEffect(() => {
+    document.documentElement.lang = language
+  }, [language])
+
+  const setLanguage = (value) => {
+    setLanguageState(value)
+    localStorage.setItem('cloudnotify_language', value)
+  }
+  const value = useMemo(() => ({
+    language,
+    setLanguage,
+    t: (key) => translations[language]?.[key] || translations.en[key] || key,
+  }), [language])
+  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>
+}
+
+export function useLanguage() {
+  const context = useContext(LanguageContext)
+  if (!context) throw new Error('useLanguage must be used within LanguageProvider')
+  return context
+}

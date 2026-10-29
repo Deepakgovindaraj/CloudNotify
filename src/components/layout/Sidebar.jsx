@@ -11,6 +11,7 @@ import {
 import { cn } from '@/utils/cn'
 import { APP_NAME } from '@/constants/config'
 import { ROUTES } from '@/constants/routes'
+import { useLanguage } from '@/context/LanguageContext'
 
 const iconMap = {
   LayoutDashboard,
@@ -29,6 +30,7 @@ const navItems = [
 ]
 
 export function Sidebar({ isOpen, onClose }) {
+  const { t } = useLanguage()
   return (
     <>
       {isOpen && (
@@ -79,7 +81,7 @@ export function Sidebar({ isOpen, onClose }) {
                 }
               >
                 <Icon className="h-5 w-5 shrink-0" />
-                {item.label}
+                {t(item.label)}
               </NavLink>
             )
           })}
@@ -87,8 +89,8 @@ export function Sidebar({ isOpen, onClose }) {
 
         <div className="p-4 border-t border-slate-200/80 dark:border-slate-800">
           <div className="rounded-xl bg-[#f1ebff] p-4 text-left shadow-[inset_0_0_0_1px_rgba(124,93,255,0.04)]">
-            <p className="text-xs font-medium text-[#6147d5]">Pro Tip</p>
-            <p className="mt-1 text-xs leading-5 text-slate-500">Connect both channels for maximum reach.</p>
+            <p className="text-xs font-medium text-[#6147d5]">{t('Pro Tip')}</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">{t('Connect both channels for maximum reach.')}</p>
           </div>
         </div>
       </aside>

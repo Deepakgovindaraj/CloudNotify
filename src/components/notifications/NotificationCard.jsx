@@ -2,8 +2,13 @@ import { Calendar, Clock, Trash2 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { StatusBadge, ChannelBadge } from '@/components/ui/Badge'
 import { formatDate } from '@/utils/formatters'
+import { useAuth } from '@/context/AuthContext'
+import { useLanguage } from '@/context/LanguageContext'
 
 export function NotificationCard({ notification, onDelete, compact }) {
+  const { user } = useAuth()
+  const { language } = useLanguage()
+  const locale = language === 'en' ? 'en-US' : language
   return (
     <article
       className={cn(
@@ -47,11 +52,13 @@ export function NotificationCard({ notification, onDelete, compact }) {
       <div className="mt-3 flex items-center gap-4 text-xs text-slate-500">
         <span className="flex items-center gap-1">
           <Calendar className="h-3.5 w-3.5" />
-          {formatDate(notification.date)}
+          {formatDate(notification.date, notification.timezone || user?.timezone, locale)}
         </span>
         <span className="flex items-center gap-1">
           <Clock className="h-3.5 w-3.5" />
-          {notification.time}
+          {new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(
+            new Date(`1970-01-01T${notification.time || '00:00'}:00Z`)
+          )}
         </span>
       </div>
     </article>

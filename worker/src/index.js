@@ -50,6 +50,7 @@ function mapNotification(row) {
     ownerEmail: row.owner_email,
     date: row.scheduled_date,
     time: row.scheduled_time,
+    timezone: row.timezone || 'Asia/Kolkata',
     channel: row.channel,
     recurring: Boolean(row.recurring),
     recurrence: row.recurrence,
@@ -105,7 +106,7 @@ async function listNotifications(request, env) {
   if (!ownerEmail) return json({ error: 'ownerEmail is required' }, 400, getOrigin(request, env))
   const result = await env.DB.prepare(
     `SELECT notification_id, title, message, recipient_email, owner_email,
-            scheduled_date, scheduled_time, channel, recurring, recurrence, status
+            scheduled_date, scheduled_time, timezone, channel, recurring, recurrence, status
        FROM notifications
       WHERE owner_email = ?
       ORDER BY scheduled_date DESC, scheduled_time DESC`
@@ -119,6 +120,7 @@ async function createNotification(request, env) {
   const recipientEmail = String(body.email || '').trim()
   const date = String(body.date || '').trim()
   const time = parseTime(body.time)
+  const timezone = String(body.timezone || 'Asia/Kolkata').trim()
   const channel = normalizeChannel(body.channel)
   if (!ownerEmail || !recipientEmail || !body.title || !body.message || !validDate(date) || !time) {
     return json({ error: 'title, message, email, ownerEmail, date, and a valid time are required' }, 400, getOrigin(request, env))
@@ -130,8 +132,8 @@ async function createNotification(request, env) {
   await env.DB.prepare(
     `INSERT INTO notifications
       (notification_id, title, message, recipient_email, owner_email, scheduled_date,
-       scheduled_time, channel, recurring, recurrence)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       scheduled_time, timezone, channel, recurring, recurrence)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).bind(
     notificationId,
     String(body.title).trim(),
@@ -140,6 +142,7 @@ async function createNotification(request, env) {
     ownerEmail,
     date,
     time,
+    timezone,
     channel,
     body.recurring ? 1 : 0,
     body.recurrence || null
@@ -329,9 +332,9 @@ async function sendEmail(env, notification) {
   if (!response.ok) throw new Error(`Gmail delivery failed with HTTP ${response.status}`)
 }
 
-function getScheduledTime(env) {
+function getScheduledTime(timeZone) {
   const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: env.APP_TIME_ZONE || 'Asia/Kolkata',
+    timeZone,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -347,17 +350,17 @@ function getScheduledTime(env) {
 }
 
 async function processDueNotifications(env) {
-  const { date, time } = getScheduledTime(env)
   const due = await env.DB.prepare(
     `SELECT n.*, c.telegram_chat_id, c.telegram_notifications_enabled
        FROM notifications n
        LEFT JOIN user_channels c ON c.email = n.owner_email
-      WHERE n.status = 'PENDING'
-        AND n.scheduled_date = ?
-        AND n.scheduled_time <= ?`
-  ).bind(date, time).all()
+      WHERE n.status = 'PENDING'`
+  ).all()
 
-  for (const row of due.results) {
+  for (const row of due.results.filter((item) => {
+    const now = getScheduledTime(item.timezone || env.APP_TIME_ZONE || 'Asia/Kolkata')
+    return item.scheduled_date === now.date && item.scheduled_time <= now.time
+  })) {
     try {
       const notification = mapNotification(row)
       const channel = normalizeChannel(notification.channel)

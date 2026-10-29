@@ -11,9 +11,14 @@ import { ErrorState } from '@/components/ui/ErrorState'
 import { TableRowSkeleton } from '@/components/ui/Skeleton'
 import { formatDate, formatNotificationTime } from '@/utils/formatters'
 import { STATUS_OPTIONS } from '@/constants/config'
+import { useAuth } from '@/context/AuthContext'
+import { useLanguage } from '@/context/LanguageContext'
 
 const PAGE_SIZE = 5
 export function HistoryPage() {
+  const { user } = useAuth()
+  const { language, t } = useLanguage()
+  const locale = language === 'en' ? 'en-US' : language
   const { notifications, loading, error, refetch, deleteNotification } = useNotifications()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -76,14 +81,14 @@ export function HistoryPage() {
 
   const statusOptions = STATUS_OPTIONS.map((s) => ({
     value: s,
-    label: s === 'all' ? 'All Statuses' : s.charAt(0).toUpperCase() + s.slice(1),
+    label: s === 'all' ? t('All Statuses') : s.charAt(0).toUpperCase() + s.slice(1),
   }))
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="font-display text-2xl font-bold">Notification History</h1>
-        <p className="text-slate-500 text-sm mt-1">View and manage all scheduled notifications.</p>
+        <h1 className="font-display text-2xl font-bold">{t('Notification History')}</h1>
+        <p className="text-slate-500 text-sm mt-1">{t('View and manage all scheduled notifications.')}</p>
       </div>
 
       <div className="glass-card p-4 flex flex-col sm:flex-row gap-4">
@@ -91,7 +96,7 @@ export function HistoryPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="search"
-            placeholder="Search notifications..."
+            placeholder={t('Search notifications...')}
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 pl-10 pr-4 py-2.5 text-sm"
@@ -111,12 +116,12 @@ export function HistoryPage() {
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30">
                 {[
-                  { key: 'title', label: 'Title' },
-                  { key: null, label: 'Message' },
-                  { key: 'channel', label: 'Channel' },
-                  { key: 'date', label: 'Date' },
-                  { key: 'time', label: 'Time' },
-                  { key: 'status', label: 'Status' },
+                  { key: 'title', label: t('Title') },
+                  { key: null, label: t('Message') },
+                  { key: 'channel', label: t('Channel') },
+                  { key: 'date', label: t('Date') },
+                  { key: 'time', label: t('Time') },
+                  { key: 'status', label: t('Status') },
                   { key: null, label: '' },
                 ].map((col) => (
                   <th key={col.label} className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-400">
@@ -148,8 +153,8 @@ export function HistoryPage() {
                     <td className="px-4 py-3 font-medium">{n.title}</td>
                     <td className="px-4 py-3 text-slate-500 max-w-[200px] truncate">{n.message}</td>
                     <td className="px-4 py-3"><ChannelBadge channel={n.channel} /></td>
-                    <td className="px-4 py-3 text-slate-500">{formatDate(n.date)}</td>
-                    <td className="px-4 py-3 text-slate-500">{n.time}</td>
+                    <td className="px-4 py-3 text-slate-500">{formatDate(n.date, n.timezone || user?.timezone, locale)}</td>
+                    <td className="px-4 py-3 text-slate-500">{new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(new Date(`1970-01-01T${n.time}:00Z`))}</td>
                     <td className="px-4 py-3"><StatusBadge status={n.status} /></td>
                     <td className="px-4 py-3">
                       <button

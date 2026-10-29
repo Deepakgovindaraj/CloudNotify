@@ -220,6 +220,7 @@ export const notificationService = {
       ownerEmail: data.ownerEmail,
       date: data.date,
       time: data.time,
+      timezone: data.timezone,
       channel: data.channel,
       status: 'PENDING',
     }

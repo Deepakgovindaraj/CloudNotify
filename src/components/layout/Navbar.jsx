@@ -5,10 +5,12 @@ import { useTheme } from '@/context/ThemeContext'
 import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/utils/cn'
 import { ROUTES } from '@/constants/routes'
+import { useLanguage } from '@/context/LanguageContext'
 
 export function Navbar({ onMenuClick }) {
   const { theme, toggleTheme } = useTheme()
   const { user, logout } = useAuth()
+  const { t } = useLanguage()
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
@@ -111,20 +113,20 @@ export function Navbar({ onMenuClick }) {
                   onClick={() => setDropdownOpen(false)}
                   className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
-                  <User className="h-4 w-4" /> Profile
+                  <User className="h-4 w-4" /> {t('Profile')}
                 </Link>
                 <Link
                   to={ROUTES.SETTINGS}
                   onClick={() => setDropdownOpen(false)}
                   className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
-                  <Settings className="h-4 w-4" /> Settings
+                  <Settings className="h-4 w-4" /> {t('Settings')}
                 </Link>
                 <button
                   onClick={handleLogout}
                   className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
                 >
-                  <LogOut className="h-4 w-4" /> Log out
+                  <LogOut className="h-4 w-4" /> {t('Log out')}
                 </button>
               </div>
             )}

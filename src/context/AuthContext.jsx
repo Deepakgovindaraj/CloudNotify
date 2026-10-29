@@ -128,7 +128,12 @@ localStorage.setItem(
   }, [])
 
   const updateUser = useCallback((updates) => {
-    setUser((prev) => (prev ? { ...prev, ...updates } : prev))
+    setUser((prev) => {
+      if (!prev) return prev
+      const next = { ...prev, ...updates }
+      localStorage.setItem('currentUser', JSON.stringify(next))
+      return next
+    })
   }, [])
   const refreshTelegramStatus = useCallback(async () => {
     if (!user?.email) return

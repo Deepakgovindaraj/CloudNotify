@@ -16,6 +16,7 @@ import {
   TIME_PICKER_MINUTE_OPTIONS,
   TIME_PICKER_PERIOD_OPTIONS,
 } from '@/utils/time'
+import { useLanguage } from '@/context/LanguageContext'
 
 const channelIcons = { telegram: Send, gmail: Mail, both: Layers }
 
@@ -39,6 +40,7 @@ export function CreateNotificationPage() {
   const [successOpen, setSuccessOpen] = useState(false)
   const { createNotification } = useNotifications()
   const { user } = useAuth()
+  const { t } = useLanguage()
   const navigate = useNavigate()
 
   const update = (field) => (e) => {
@@ -72,6 +74,7 @@ export function CreateNotificationPage() {
         email: form.email,
         date: form.date,
         time: displayTime,
+        timezone: user?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
         channel: form.channel,
         recurring: form.recurring,
         recurrence: form.recurrence,
@@ -93,8 +96,8 @@ export function CreateNotificationPage() {
   return (
     <div className="max-w-2xl mx-auto animate-fade-in">
       <div className="mb-6">
-        <h1 className="font-display text-2xl font-bold">Create Notification</h1>
-        <p className="text-slate-500 text-sm mt-1">Schedule a reminder via Telegram, Gmail, or both.</p>
+        <h1 className="font-display text-2xl font-bold">{t('Create Notification')}</h1>
+        <p className="text-slate-500 text-sm mt-1">{t('Schedule a reminder via Telegram, Gmail, or both.')}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="glass-card p-6 md:p-8 space-y-6">
@@ -103,7 +106,7 @@ export function CreateNotificationPage() {
         )}
 
         <Input
-          label="Notification Title"
+          label={t('Notification Title')}
           name="title"
           value={form.title}
           onChange={update('title')}
@@ -112,7 +115,7 @@ export function CreateNotificationPage() {
         />
 
         <Textarea
-          label="Message"
+          label={t('Message')}
           name="message"
           value={form.message}
           onChange={update('message')}
@@ -121,7 +124,7 @@ export function CreateNotificationPage() {
         />
 
         <Input
-          label="Recipient Email"
+          label={t('Recipient Email')}
           name="email"
           type="email"
           value={form.email}
@@ -141,7 +144,7 @@ export function CreateNotificationPage() {
           />
           <div className="space-y-1.5">
             <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-              Time
+              {t('Time')}
             </span>
             <div
               className="flex flex-wrap items-center gap-2"
@@ -211,7 +214,7 @@ export function CreateNotificationPage() {
             </div>
             {form.timeHour && form.timeMinute !== '' && (
               <p className="text-xs text-slate-500">
-                Selected: {form.timeHour}:{form.timeMinute} {form.timePeriod}
+                {t('Selected')}: {form.timeHour}:{form.timeMinute} {form.timePeriod}
               </p>
             )}
             {errors.time && (
@@ -220,7 +223,7 @@ export function CreateNotificationPage() {
               </p>
             )}
             {!errors.time && (
-              <p className="text-xs text-slate-500">Uses your local timezone</p>
+              <p className="text-xs text-slate-500">{t('Uses your local timezone')} ({user?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone})</p>
             )}
           </div>
         </div>
