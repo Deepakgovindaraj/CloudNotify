@@ -60,16 +60,16 @@ export function AuthPage() {
   }
 
   return (
-    <div className="glass-card p-8 md:p-10 shadow-xl">
+    <div className="flex w-full flex-col items-center text-center text-[#f5f5f5]">
       <div className="flex flex-col items-center text-center">
         <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-600 to-accent-500 text-white shadow-lg shadow-primary-500/30">
           <Cloud className="h-11 w-11" />
         </div>
 
-        <h1 className="font-display text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
+        <h1 className="font-display text-3xl md:text-4xl font-bold text-[#f5f5f5]">
           Welcome to {APP_NAME}
         </h1>
-        <p className="mt-3 max-w-sm text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+        <p className="mt-3 max-w-sm text-sm text-slate-300 leading-relaxed">
           Sign in with your Google account to schedule and manage notifications
         </p>
       </div>
@@ -121,7 +121,7 @@ export function AuthPage() {
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={handleGoogleError}
-              theme="outline"
+              theme="filled_black"
               size="large"
               text="signin_with"
               shape="rectangular"

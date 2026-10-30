@@ -30,7 +30,8 @@ export function DashboardPage() {
   const recent = notifications.slice(0, 4)
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="relative isolate min-h-full overflow-hidden">
+      <div className="relative z-10 space-y-6 animate-fade-in">
       <WelcomeCard name={user?.name} />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -103,6 +104,7 @@ export function DashboardPage() {
 ))}
           </div>
         ) : null}
+      </div>
       </div>
     </div>
   )

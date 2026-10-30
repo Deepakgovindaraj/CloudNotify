@@ -80,9 +80,7 @@ export function ProfilePage() {
         "Open Telegram and click START in the bot to complete connection."
       )
   
-      setTimeout(async () => {
-        await refreshTelegramStatus()
-      }, 5000)
+      window.setTimeout(() => refreshTelegramStatus(), 5000)
   
     } catch (error) {
       console.error(error)

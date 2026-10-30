@@ -9,7 +9,7 @@ import { Modal } from '@/components/ui/Modal'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { TableRowSkeleton } from '@/components/ui/Skeleton'
-import { formatDate, formatNotificationTime } from '@/utils/formatters'
+import { formatDate, formatTime } from '@/utils/formatters'
 import { STATUS_OPTIONS } from '@/constants/config'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
@@ -154,7 +154,7 @@ export function HistoryPage() {
                     <td className="px-4 py-3 text-slate-500 max-w-[200px] truncate">{n.message}</td>
                     <td className="px-4 py-3"><ChannelBadge channel={n.channel} /></td>
                     <td className="px-4 py-3 text-slate-500">{formatDate(n.date, n.timezone || user?.timezone, locale)}</td>
-                    <td className="px-4 py-3 text-slate-500">{new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(new Date(`1970-01-01T${n.time}:00Z`))}</td>
+                    <td className="px-4 py-3 text-slate-500">{formatTime(n.time, locale)}</td>
                     <td className="px-4 py-3"><StatusBadge status={n.status} /></td>
                     <td className="px-4 py-3">
                       <button
