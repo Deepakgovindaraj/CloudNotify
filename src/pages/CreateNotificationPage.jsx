@@ -243,11 +243,11 @@ export function CreateNotificationPage() {
                   className={cn(
                     'flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all',
                     form.channel === ch.value
-                      ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10'
+                      ? 'border-violet-400 bg-violet-950/80 text-violet-100'
                       : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
                   )}
                 >
-                  <Icon className={cn('h-6 w-6', form.channel === ch.value ? 'text-primary-600' : 'text-slate-400')} />
+                  <Icon className={cn('h-6 w-6', form.channel === ch.value ? 'text-violet-300' : 'text-slate-400')} />
                   <span className="text-sm font-medium">{ch.label}</span>
                 </button>
               )

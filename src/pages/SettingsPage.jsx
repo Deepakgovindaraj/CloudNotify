@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Sun, Moon } from 'lucide-react'
+import { Sun, Sparkles } from 'lucide-react'
 import { useTheme } from '@/context/ThemeContext'
 import { useAuth } from '@/context/AuthContext'
 import { Select } from '@/components/ui/Input'
@@ -9,14 +9,14 @@ import { cn } from '@/utils/cn'
 import { useLanguage } from '@/context/LanguageContext'
 
 export function SettingsPage() {
-  const { theme, setTheme } = useTheme()
+  const { appearance, setAppearance } = useTheme()
   const { user, updateUser } = useAuth()
   const { language, setLanguage, t } = useLanguage()
   const [timezone, setTimezone] = useState(user?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC')
 
-  const themeOptions = [
-    { value: 'light', label: t('Light'), icon: Sun },
-    { value: 'dark', label: t('Dark'), icon: Moon },
+  const appearanceOptions = [
+    { value: 'normal', label: 'Normal', icon: Sun },
+    { value: 'enhance', label: 'Enhance', icon: Sparkles },
   ]
 
   return (
@@ -29,17 +29,18 @@ export function SettingsPage() {
       <section className="glass-card p-6 space-y-4">
         <h2 className="font-display font-semibold">{t('Appearance')}</h2>
         <div className="grid grid-cols-2 gap-3">
-          {themeOptions.map((opt) => {
+          {appearanceOptions.map((opt) => {
             const Icon = opt.icon
             return (
               <button
                 key={opt.value}
                 type="button"
-                onClick={() => setTheme(opt.value)}
+                onClick={() => setAppearance(opt.value)}
+                aria-pressed={appearance === opt.value}
                 className={cn(
                   'flex items-center justify-center gap-2 rounded-xl border-2 p-4 transition-all',
-                  theme === opt.value
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10'
+                  appearance === opt.value
+                    ? 'border-primary-500 bg-primary-100 text-primary-900 dark:bg-primary-500/20 dark:text-primary-100'
                     : 'border-slate-200 dark:border-slate-700'
                 )}
               >

@@ -1,20 +1,18 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Menu, Bell, Sun, Moon, LogOut, User, Settings, ChevronDown, Trash2 } from 'lucide-react'
-import { useTheme } from '@/context/ThemeContext'
+import { Menu, Bell, LogOut, User, Settings, ChevronDown } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/utils/cn'
 import { ROUTES } from '@/constants/routes'
 import { useLanguage } from '@/context/LanguageContext'
 import { useAppNotifications } from '@/context/NotificationContext'
+import SwipeRow from '@/components/ui/SwipeRow'
 
 export function Navbar({ onMenuClick }) {
-  const { theme, toggleTheme } = useTheme()
   const { user, logout } = useAuth()
   const { t } = useLanguage()
   const { items, unreadCount, markAllRead, removeNotification, restoreNotification, clearAll } = useAppNotifications()
   const [notificationsOpen, setNotificationsOpen] = useState(false)
-  const [deletingNotificationIds, setDeletingNotificationIds] = useState(() => new Set())
   const [undoNotification, setUndoNotification] = useState(null)
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -47,18 +45,10 @@ export function Navbar({ onMenuClick }) {
   const handleDeleteNotification = (id) => {
     const item = items.find((notification) => notification.id === id)
     if (!item) return
-    setDeletingNotificationIds((current) => new Set(current).add(id))
-    window.setTimeout(() => {
-      removeNotification(id)
-      setDeletingNotificationIds((current) => {
-        const next = new Set(current)
-        next.delete(id)
-        return next
-      })
-      setUndoNotification(item)
-      if (undoTimerRef.current) window.clearTimeout(undoTimerRef.current)
-      undoTimerRef.current = window.setTimeout(() => setUndoNotification(null), 4000)
-    }, 420)
+    removeNotification(id)
+    setUndoNotification(item)
+    if (undoTimerRef.current) window.clearTimeout(undoTimerRef.current)
+    undoTimerRef.current = window.setTimeout(() => setUndoNotification(null), 4000)
   }
 
   const handleUndoNotification = () => {
@@ -95,14 +85,6 @@ export function Navbar({ onMenuClick }) {
         <div className="hidden lg:block" />
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </button>
-
           <div className="relative" ref={notificationsRef}>
             <button
               onClick={() => {
@@ -122,7 +104,7 @@ export function Navbar({ onMenuClick }) {
               )}
             </button>
             {notificationsOpen && (
-              <div className="absolute right-0 top-12 z-50 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+              <div className="notification-menu-panel absolute right-0 top-12 z-50 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <p className="font-semibold">{t('Notifications')}</p>
                   <div className="flex items-center gap-3">
@@ -137,27 +119,21 @@ export function Navbar({ onMenuClick }) {
                 {items.length ? (
                   <div className="space-y-2">
                     {items.slice(0, 6).map((item) => (
-                      <div
+                      <SwipeRow
                         key={item.id}
-                        className={cn(
-                          'flex items-start gap-2 rounded-xl border border-violet-300/60 bg-gradient-to-br from-violet-100 via-indigo-100 to-purple-100 px-3 py-3 shadow-sm shadow-violet-200/50 dark:border-violet-800/70 dark:from-violet-950/80 dark:via-indigo-950/80 dark:to-purple-950/80 dark:shadow-black/20',
-                          deletingNotificationIds.has(item.id) && 'animate-notification-remove'
-                        )}
+                        actions={[{ id: 'delete', label: t('Delete') }]}
+                        onCommit={() => handleDeleteNotification(item.id)}
+                        rowColor="#32145f"
+                        drawerColor="#4c1d95"
+                        height={96}
+                        radius={18}
+                        label={`Notification: ${item.title}`}
                       >
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium">{item.title}</p>
-                          <p className="text-xs text-slate-500">{item.message}</p>
+                          <p className="text-sm font-semibold text-zinc-100">{item.title}</p>
+                          <p className="line-clamp-2 text-sm leading-5 text-zinc-300">{item.message}</p>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteNotification(item.id)}
-                          className="notification-delete-button shrink-0 rounded-md p-1 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
-                          aria-label={t('Delete notification')}
-                          title={t('Delete notification')}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
+                      </SwipeRow>
                     ))}
                   </div>
                 ) : <p className="py-4 text-center text-sm text-slate-500">{t('No notifications')}</p>}

@@ -21,7 +21,12 @@ import { useLanguage } from '@/context/LanguageContext'
 export function DashboardPage() {
   const { user } = useAuth()
   const { t } = useLanguage()
-  const { notifications, stats, activity, loading, error, refetch } = useNotifications()
+  const { notifications, stats, activity, loading, error, refetch, deleteNotification } = useNotifications()
+
+  const handleDeleteNotification = async (notification) => {
+    await deleteNotification(notification.notificationId)
+    await refetch()
+  }
 
   if (error === 'network') {
     return <ErrorState onRetry={refetch} />
@@ -77,7 +82,7 @@ export function DashboardPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <UpcomingNotifications notifications={notifications} />
+        <UpcomingNotifications notifications={notifications} onDelete={handleDeleteNotification} />
         <RecentActivity activities={activity} />
       </div>
 
@@ -100,6 +105,7 @@ export function DashboardPage() {
     key={n.notificationId}
     notification={n}
     compact
+    onDelete={handleDeleteNotification}
   />
 ))}
           </div>

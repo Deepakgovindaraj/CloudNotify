@@ -1,65 +1,58 @@
-import { Calendar, Clock, Trash2 } from 'lucide-react'
+import { Calendar, Clock } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { StatusBadge, ChannelBadge } from '@/components/ui/Badge'
 import { formatDate, formatTime } from '@/utils/formatters'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
+import SwipeRow from '@/components/ui/SwipeRow'
 
 export function NotificationCard({ notification, onDelete, compact }) {
   const { user } = useAuth()
   const { language } = useLanguage()
   const locale = language === 'en' ? 'en-US' : language
   return (
-    <article
-      className={cn(
-        'group glass-card p-5 transition-all duration-300',
-        'hover:shadow-xl hover:shadow-primary-500/10 hover:-translate-y-0.5',
-        'dark:hover:border-primary-500/30'
-      )}
+    <SwipeRow
+      actions={onDelete ? [{ id: 'delete', label: 'Delete' }] : []}
+      onCommit={() => onDelete?.(notification)}
+      rowColor="#32145f"
+      drawerColor="#4c1d95"
+      height={compact ? 112 : 160}
+      label={`Notification: ${notification.title}`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <h3 className="font-display font-semibold text-slate-900 dark:text-white truncate">
+      <div className={cn('min-w-0 flex-1 py-3', !compact && 'py-2')}>
+        <div className="min-w-0">
+          <h3 className="truncate font-display font-semibold text-white">
             {notification.title}
           </h3>
           {!compact && (
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
+            <p className="mt-1 line-clamp-2 text-sm text-slate-300">
               {notification.message}
             </p>
           )}
         </div>
-        {onDelete && (
-          <button
-            onClick={() => onDelete(notification)}
-            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-            aria-label="Delete notification"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        )}
-      </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <StatusBadge status={notification.status} />
-        <ChannelBadge channel={notification.channel} />
-        {notification.recurring && (
-          <span className="text-xs text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full capitalize">
-            {notification.recurrence}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <StatusBadge status={notification.status} />
+          <ChannelBadge channel={notification.channel} />
+          {notification.recurring && (
+            <span className="rounded-full bg-slate-700 px-2 py-0.5 text-xs capitalize text-slate-300">
+              {notification.recurrence}
+            </span>
+          )}
+        </div>
+
+        <div className="mt-2 flex items-center gap-4 text-xs text-slate-400">
+          <span className="flex items-center gap-1">
+            <Calendar className="h-3.5 w-3.5" />
+            {formatDate(notification.date, notification.timezone || user?.timezone, locale)}
           </span>
-        )}
+          <span className="flex items-center gap-1">
+            <Clock className="h-3.5 w-3.5" />
+            {formatTime(notification.time, locale)}
+          </span>
+        </div>
       </div>
-
-      <div className="mt-3 flex items-center gap-4 text-xs text-slate-500">
-        <span className="flex items-center gap-1">
-          <Calendar className="h-3.5 w-3.5" />
-          {formatDate(notification.date, notification.timezone || user?.timezone, locale)}
-        </span>
-        <span className="flex items-center gap-1">
-          <Clock className="h-3.5 w-3.5" />
-          {formatTime(notification.time, locale)}
-        </span>
-      </div>
-    </article>
+    </SwipeRow>
   )
 }
 

@@ -7,7 +7,7 @@ import { useLanguage } from '@/context/LanguageContext'
 export function WelcomeCard({ name }) {
   const { t } = useLanguage()
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 via-primary-500 to-accent-500 p-8 text-white shadow-xl shadow-primary-500/25 animate-slide-up">
+    <div className="dashboard-welcome-card relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 via-primary-500 to-accent-500 p-8 text-white shadow-xl shadow-primary-500/25 animate-slide-up">
       <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
       <div className="absolute -bottom-4 -left-4 h-32 w-32 rounded-full bg-accent-400/20 blur-xl" />
       <div className="relative">
@@ -86,7 +86,7 @@ export function RecentActivity({ activities }) {
   )
 }
 
-export function UpcomingNotifications({ notifications }) {
+export function UpcomingNotifications({ notifications, onDelete }) {
   const { t } = useLanguage()
   const upcoming = notifications?.filter(
     (n) => n.status?.toUpperCase() === 'PENDING'
@@ -98,7 +98,7 @@ export function UpcomingNotifications({ notifications }) {
       {upcoming?.length ? (
         <div className="space-y-3">
           {upcoming.map((n) => (
-            <NotificationCard key={n.notificationId} notification={n} compact />
+            <NotificationCard key={n.notificationId} notification={n} compact onDelete={onDelete} />
           ))}
         </div>
       ) : (
@@ -117,8 +117,6 @@ export function WeeklyChart({ data }) {
       <h3 className="font-display font-semibold mb-4">{t('Notification Statistics')}</h3>
       <div className="flex items-end justify-between gap-2 h-40">
         {data?.map((d) => {
-          const total = d.sent + d.failed
-          const height = (total / max) * 100
           return (
             <div key={d.day} className="flex-1 flex flex-col items-center gap-2">
               <div className="w-full flex flex-col justify-end h-32 gap-0.5">

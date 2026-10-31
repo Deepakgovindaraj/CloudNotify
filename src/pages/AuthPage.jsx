@@ -5,6 +5,7 @@ import { Cloud, ExternalLink } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { ROUTES } from '@/constants/routes'
 import { APP_NAME } from '@/constants/config'
+import GradientText from '@/components/GradientText'
 import {
   initializeTelegramWebApp,
   isTelegramMiniApp,
@@ -66,8 +67,16 @@ export function AuthPage() {
           <Cloud className="h-11 w-11" />
         </div>
 
-        <h1 className="font-display text-3xl md:text-4xl font-bold text-[#f5f5f5]">
-          Welcome to {APP_NAME}
+        <h1 className="font-display text-3xl md:text-4xl font-bold">
+          <GradientText
+            colors={['#5227FF', '#FF9FFC', '#B497CF']}
+            animationSpeed={3}
+            variant="flow"
+            glow={0.12}
+            className="font-display"
+          >
+            Welcome to {APP_NAME}
+          </GradientText>
         </h1>
         <p className="mt-3 max-w-sm text-sm text-slate-300 leading-relaxed">
           Sign in with your Google account to schedule and manage notifications
@@ -117,7 +126,7 @@ export function AuthPage() {
         </div>
       ) : (
         <div className="mt-10 mb-6 flex w-full justify-center">
-          <div className="flex justify-center [&>div]:flex [&>div]:justify-center">
+          <div className="specular-button specular-button--google flex justify-center [&>div]:flex [&>div]:justify-center">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={handleGoogleError}
@@ -131,7 +140,7 @@ export function AuthPage() {
         </div>
       )}
 
-      <p className="text-center text-xs text-slate-400 dark:text-slate-500">
+      <p className="inline-block rounded-full bg-[#0d0b12]/75 px-3 py-1 text-center text-xs text-white shadow-sm backdrop-blur-sm">
         Secure authentication powered by Google
       </p>
     </div>

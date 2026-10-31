@@ -123,26 +123,6 @@
   }
 }
 
-.animate-notification-remove {
-  overflow: hidden;
-  animation: notification-remove 0.42s cubic-bezier(0.4, 0, 1, 1) forwards;
-}
-
-.notification-delete-button {
-  transition: transform 0.18s ease, color 0.18s ease, background-color 0.18s ease;
-}
-
-.notification-delete-button:hover {
-  animation: notification-delete-hover 0.38s ease-in-out;
-  transform: scale(1.18);
-}
-
-@keyframes notification-delete-hover {
-  0%, 100% { transform: scale(1.18) translateX(0); }
-  25% { transform: scale(1.18) translateX(-2px) rotate(-8deg); }
-  75% { transform: scale(1.18) translateX(2px) rotate(8deg); }
-}
-
 .intro-splash {
   position: fixed;
   inset: 0;
@@ -333,14 +313,6 @@
     animation-iteration-count: 1;
   }
 
-  .animate-notification-remove {
-    animation-duration: 0.01ms;
-  }
-
-  .notification-delete-button:hover {
-    animation: none;
-    transform: scale(1.1);
-  }
 }
 
 @layer utilities {
@@ -400,6 +372,81 @@
   .monochrome-app {
     background: #0d0b12 !important;
     color: #f5f5f5 !important;
+  }
+
+  .monochrome-app,
+  .normal-app {
+    transition: background-color 500ms ease, color 500ms ease;
+  }
+
+  .normal-app {
+    color-scheme: light;
+    background: #ffffff !important;
+    color: #18181b !important;
+  }
+
+  .normal-app main,
+  .normal-app header,
+  .normal-app aside,
+  .normal-app section,
+  .normal-app .glass-card,
+  .normal-app .notification-menu-panel {
+    background-color: #ffffff !important;
+    border-color: #e4e4e7 !important;
+    color: #18181b !important;
+    transition: background-color 500ms ease, color 500ms ease, border-color 500ms ease;
+  }
+
+  .normal-app .dashboard-welcome-card {
+    background: linear-gradient(135deg, #4c1d95, #6d28d9, #7e22ce) !important;
+    color: #ffffff !important;
+  }
+
+  .normal-app .glass-card .text-white:not(button) {
+    color: #18181b !important;
+  }
+
+  .normal-app .dashboard-welcome-card [class*="text-primary-"],
+  .normal-app [class*="dark:text-slate-"],
+  .normal-app [class*="dark:text-primary-"] {
+    color: #3f3f46 !important;
+  }
+
+  .normal-app button[aria-pressed='true'] {
+    background-color: #ede9fe !important;
+    color: #4c1d95 !important;
+  }
+
+  .normal-app input,
+  .normal-app textarea,
+  .normal-app select {
+    background-color: #ffffff !important;
+    color: #18181b !important;
+    border-color: #d4d4d8 !important;
+    transition: background-color 500ms ease, color 500ms ease, border-color 500ms ease;
+  }
+
+  .normal-app select option {
+    background-color: #ffffff;
+    color: #18181b;
+  }
+
+  .normal-app .bg-slate-800,
+  .normal-app [class*="dark:bg-slate-800"] {
+    background-color: #f4f4f5 !important;
+  }
+
+  .normal-app .text-white:not(button):not(button *) {
+    color: #18181b !important;
+  }
+
+  .normal-app .dashboard-welcome-card .text-white,
+  .normal-app .dashboard-welcome-card [class*="text-primary-"] {
+    color: #f5f3ff !important;
+  }
+
+  .normal-app .dashboard-welcome-card h1 {
+    color: #ffffff !important;
   }
 
   .monochrome-app main {
@@ -486,6 +533,18 @@
     color: #ffffff !important;
   }
 
+  .monochrome-app button[aria-pressed='true'],
+  .monochrome-app button[aria-pressed='true']:hover {
+    background: #4c1d95 !important;
+    border-color: #a78bfa !important;
+    color: #ffffff !important;
+  }
+
+  .monochrome-app select option {
+    background-color: #32145f;
+    color: #f5f5f5;
+  }
+
   .monochrome-app tbody tr:hover {
     background-color: rgba(255, 255, 255, 0.1) !important;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -1px 0 rgba(255, 255, 255, 0.18);
@@ -497,12 +556,120 @@
     background: rgba(255, 255, 255, 0.14) !important;
   }
 
+  .specular-button {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border: 1.5px solid rgba(255, 255, 255, 0.32);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 0 18px rgba(255, 255, 255, 0.18), 0 8px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  .specular-button::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    z-index: 0;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      transparent 265deg,
+      rgba(255, 255, 255, 1) 305deg,
+      rgba(255, 255, 255, 1) 326deg,
+      transparent 358deg,
+      transparent 360deg
+    );
+    animation: specular-button-orbit 3s linear infinite;
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 10px rgba(255, 255, 255, 0.65));
+    pointer-events: none;
+  }
+
+  .specular-button::after {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    z-index: 1;
+    border-radius: inherit;
+    background: inherit;
+    opacity: 0.9;
+    pointer-events: none;
+  }
+
+  .specular-button > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  .specular-button--google {
+    padding: 2px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .specular-button--google::after {
+    background: #202124;
+  }
+
+  .specular-button--google > div {
+    position: relative;
+    z-index: 2;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  @keyframes specular-button-orbit {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .specular-button::before {
+      animation: none;
+    }
+  }
+
   .monochrome-app aside [class*="bg-[#f1ebff]"] {
     background: #27272a !important;
   }
 
   .monochrome-app aside [class*="bg-[#f1ebff]"] p {
     color: #ffffff !important;
+  }
+
+  .monochrome-app .glass-card {
+    background-color: #32145f !important;
+    border-color: rgba(196, 181, 253, 0.28) !important;
+  }
+
+  .monochrome-app .dashboard-welcome-card {
+    background: linear-gradient(135deg, #4c1d95, #6d28d9, #7e22ce) !important;
+  }
+
+  .monochrome-app .notification-menu-panel {
+    background-color: #32145f !important;
+    border-color: rgba(196, 181, 253, 0.28) !important;
+  }
+
+  .monochrome-app .glass-card .rounded-xl[class*="bg-gradient-to-br"] {
+    background: #5b21b6 !important;
+  }
+
+  .monochrome-app aside nav a[aria-current='page'] {
+    background: #4c1d95 !important;
+  }
+
+  .monochrome-app aside [class*="bg-[#f1ebff]"] {
+    background: #4c1d95 !important;
+  }
+
+  .monochrome-app [class*="bg-gradient"] {
+    background: #4c1d95 !important;
+  }
+
+  .monochrome-app button[class*="dark:bg-slate-800"] {
+    background-color: #4c1d95 !important;
+    border-color: rgba(196, 181, 253, 0.28) !important;
+    color: #f5f5f5 !important;
   }
 
   .monochrome-app [class*="shadow-"] {

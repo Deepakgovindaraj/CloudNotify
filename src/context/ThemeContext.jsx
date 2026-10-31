@@ -2,11 +2,16 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 
 const ThemeContext = createContext(null)
 const STORAGE_KEY = 'cloudnotify-theme'
+const APPEARANCE_KEY = 'cloudnotify-appearance'
 
 export function ThemeProvider({ children }) {
   const [theme, setThemeState] = useState(() => {
     if (typeof window === 'undefined') return 'light'
     return localStorage.getItem(STORAGE_KEY) || 'light'
+  })
+  const [appearance, setAppearance] = useState(() => {
+    if (typeof window === 'undefined') return 'enhance'
+    return localStorage.getItem(APPEARANCE_KEY) === 'normal' ? 'normal' : 'enhance'
   })
 
   useEffect(() => {
@@ -19,6 +24,10 @@ export function ThemeProvider({ children }) {
     localStorage.setItem(STORAGE_KEY, theme)
   }, [theme])
 
+  useEffect(() => {
+    localStorage.setItem(APPEARANCE_KEY, appearance)
+  }, [appearance])
+
   const setTheme = useCallback((value) => {
     setThemeState(value)
   }, [])
@@ -28,7 +37,7 @@ export function ThemeProvider({ children }) {
   }, [])
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, isDark: theme === 'dark' }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, isDark: theme === 'dark', appearance, setAppearance }}>
       {children}
     </ThemeContext.Provider>
   )
