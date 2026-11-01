@@ -15,7 +15,7 @@ export function AuthLayout() {
       clickEffect="burst"
     >
       <div className="relative isolate min-h-screen bg-[#0d0b12] text-[#f5f5f5]">
-        <div className="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-screen" aria-hidden="true">
           <GradientWaves
             horizonColor="#5227FF"
             waveColor="#FF9FFC"
@@ -42,11 +42,9 @@ export function AuthLayout() {
           </nav>
         </header>
 
-        <main className="relative z-10 flex min-h-[calc(100vh-4.5rem)] items-center justify-center px-6 pb-16 pt-8">
-          <div className="w-full max-w-md animate-fade-in">
-            <Outlet />
-          </div>
-        </main>
+        <div className="relative z-10">
+          <Outlet />
+        </div>
       </div>
     </SwarmCursor>
   )
