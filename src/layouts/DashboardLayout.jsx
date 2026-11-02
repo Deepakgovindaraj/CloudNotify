@@ -5,6 +5,7 @@ import { Navbar } from '@/components/layout/Navbar'
 import { IntroSplash } from '@/components/ui/IntroSplash'
 import Particles from '@/components/Particles'
 import Silk from '@/components/Silk'
+import { NeonReveal } from '@/components/ui/NeonReveal'
 import { useTheme } from '@/context/ThemeContext'
 
 export function DashboardLayout() {
@@ -25,7 +26,7 @@ export function DashboardLayout() {
   }, [appearance])
 
   return (
-    <div className={`${appearance === 'enhance' ? 'monochrome-app' : 'normal-app'} relative isolate flex min-h-screen overflow-hidden bg-[#0d0b12] text-[#f5f5f5]`}>
+    <div className={`${appearance === 'night' ? 'night-app' : appearance === 'enhance' ? 'monochrome-app' : 'normal-app'} relative isolate flex min-h-screen overflow-hidden bg-[#0d0b12] text-[#f5f5f5]`}>
       {showIntro && <IntroSplash onComplete={handleIntroComplete} />}
       <div
         className="pointer-events-none absolute inset-0 z-0 transition-opacity duration-500 ease-in-out"
@@ -71,9 +72,11 @@ export function DashboardLayout() {
           onMenuClick={() => setSidebarOpen((open) => !open)}
           sidebarOpen={sidebarOpen}
         />
-        <main className="flex-1 p-4 lg:p-6 overflow-auto">
-          <Outlet />
-        </main>
+        <NeonReveal enabled={appearance === 'night'} className="flex min-h-0 flex-1 flex-col">
+          <main className="flex-1 p-4 lg:p-6 overflow-auto">
+            <Outlet />
+          </main>
+        </NeonReveal>
       </div>
     </div>
   )

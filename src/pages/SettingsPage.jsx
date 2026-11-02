@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Sun, Sparkles } from 'lucide-react'
+import { Moon, Sun, Sparkles } from 'lucide-react'
 import { useTheme } from '@/context/ThemeContext'
 import { useAuth } from '@/context/AuthContext'
 import { Select } from '@/components/ui/Input'
@@ -38,6 +38,7 @@ export function SettingsPage() {
   const appearanceOptions = [
     { value: 'normal', label: 'Normal', icon: Sun },
     { value: 'enhance', label: 'Enhance', icon: Sparkles },
+    { value: 'night', label: 'Night Mode', icon: Moon },
   ]
 
   return (
@@ -49,7 +50,7 @@ export function SettingsPage() {
 
       <section className="glass-card p-6 space-y-4">
         <h2 className="font-display font-semibold">{t('Appearance')}</h2>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {appearanceOptions.map((opt) => {
             const Icon = opt.icon
             return (

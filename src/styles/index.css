@@ -866,6 +866,162 @@
   .monochrome-app [class*="shadow-"] {
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35) !important;
   }
+
+  .night-app {
+    color-scheme: dark;
+    background: #0a0a0a !important;
+    color: #f5f5f5 !important;
+  }
+
+  .night-app main {
+    background: transparent !important;
+    color: #f5f5f5 !important;
+  }
+
+  .night-app aside,
+  .night-app header,
+  .night-app section,
+  .night-app .glass-card,
+  .night-app .notification-menu-panel {
+    background-color: rgba(23, 23, 23, 0.96) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: #f5f5f5 !important;
+  }
+
+  .night-app aside {
+    background-color: #0a0a0a !important;
+  }
+
+  .night-app aside [class*="bg-[#f1ebff]"] {
+    background: #1c1c1c !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .night-app aside [class*="bg-[#f1ebff]"] p:first-child {
+    color: #ffffff !important;
+  }
+
+  .night-app aside [class*="bg-[#f1ebff]"] p + p {
+    color: #d4d4d4 !important;
+  }
+
+  .night-app .bg-white,
+  .night-app .bg-slate-50,
+  .night-app .bg-slate-100,
+  .night-app .dark\:bg-\[\#0f1117\],
+  .night-app [class*="dark:bg-slate-800"] {
+    background-color: #171717 !important;
+  }
+
+  .night-app .text-slate-900,
+  .night-app .text-slate-800,
+  .night-app .text-slate-700,
+  .night-app .text-slate-600,
+  .night-app .text-slate-500,
+  .night-app .text-slate-400,
+  .night-app .text-primary-600,
+  .night-app .text-primary-500 {
+    color: #d4d4d4 !important;
+  }
+
+  .night-app .text-white,
+  .night-app .text-primary-100,
+  .night-app .text-primary-200 {
+    color: #ffffff !important;
+  }
+
+  .night-app .bg-primary-600,
+  .night-app .bg-primary-500,
+  .night-app .bg-accent-500,
+  .night-app [class*="bg-gradient"] {
+    background: linear-gradient(110deg, #404040, #737373) !important;
+  }
+
+  .night-app input,
+  .night-app textarea,
+  .night-app select {
+    background-color: #111111 !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+  }
+
+  .night-app select option {
+    background-color: #171717;
+    color: #ffffff;
+  }
+
+  .night-app aside nav a {
+    color: #d4d4d4 !important;
+  }
+
+  .night-app aside nav a[aria-current='page'],
+  .night-app button[aria-pressed='true'] {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: #d4d4d4 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 18px rgba(255, 255, 255, 0.12);
+  }
+
+  .night-app tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .neon-reveal {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+
+  .neon-reveal__content {
+    position: relative;
+    z-index: 1;
+    transform-origin: top;
+  }
+
+  .neon-reveal__tube {
+    display: none;
+  }
+
+  .neon-reveal__light {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 30% 90% at 0% 50%, rgba(255, 255, 255, 0.42), rgba(220, 220, 220, 0.16) 24%, transparent 100%),
+      radial-gradient(ellipse 30% 90% at 100% 50%, rgba(255, 255, 255, 0.42), rgba(220, 220, 220, 0.16) 24%, transparent 100%),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.2), rgba(220, 220, 220, 0.08) 8%, transparent 30%, transparent 70%, rgba(220, 220, 220, 0.08) 92%, rgba(255, 255, 255, 0.2));
+    opacity: 0;
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+
+  .neon-reveal[data-active='true'] .neon-reveal__light {
+    animation: neon-light-reveal 1.4s 0.55s ease-out both;
+  }
+
+  .neon-reveal[data-active='true'] .neon-reveal__content {
+    animation: neon-content-reveal 1.2s 0.45s cubic-bezier(0.2, 0.75, 0.25, 1) both;
+  }
+
+  @keyframes neon-light-reveal {
+    0% { opacity: 0; }
+    25% { opacity: 0.6; }
+    60% { opacity: 0.34; }
+    100% { opacity: 0.24; }
+  }
+
+  @keyframes neon-content-reveal {
+    0% { opacity: 0.2; clip-path: inset(0 50% 0 50%); }
+    100% { opacity: 1; clip-path: inset(0 0 0 0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .neon-reveal[data-active='true'] .neon-reveal__light,
+    .neon-reveal[data-active='true'] .neon-reveal__content {
+      animation-duration: 0.01ms;
+      animation-delay: 0ms;
+    }
+  }
 }
 
 @theme inline {

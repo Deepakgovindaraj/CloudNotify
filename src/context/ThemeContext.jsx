@@ -11,18 +11,21 @@ export function ThemeProvider({ children }) {
   })
   const [appearance, setAppearance] = useState(() => {
     if (typeof window === 'undefined') return 'enhance'
-    return localStorage.getItem(APPEARANCE_KEY) === 'normal' ? 'normal' : 'enhance'
+    const storedAppearance = localStorage.getItem(APPEARANCE_KEY)
+    return ['normal', 'enhance', 'night'].includes(storedAppearance)
+      ? storedAppearance
+      : 'enhance'
   })
 
   useEffect(() => {
     const root = document.documentElement
-    if (theme === 'dark') {
+    if (theme === 'dark' || appearance === 'night') {
       root.classList.add('dark')
     } else {
       root.classList.remove('dark')
     }
     localStorage.setItem(STORAGE_KEY, theme)
-  }, [theme])
+  }, [theme, appearance])
 
   useEffect(() => {
     localStorage.setItem(APPEARANCE_KEY, appearance)
