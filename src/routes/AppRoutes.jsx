@@ -12,6 +12,9 @@ const CreateNotificationPage = lazy(() =>
   import('@/pages/CreateNotificationPage').then((m) => ({ default: m.CreateNotificationPage }))
 )
 const HistoryPage = lazy(() => import('@/pages/HistoryPage').then((m) => ({ default: m.HistoryPage })))
+const InterviewEventsPage = lazy(() =>
+  import('@/pages/InterviewEventsPage').then((m) => ({ default: m.InterviewEventsPage }))
+)
 const ProfilePage = lazy(() => import('@/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })))
 const SettingsPage = lazy(() => import('@/pages/SettingsPage').then((m) => ({ default: m.SettingsPage })))
 
@@ -93,6 +96,14 @@ export function AppRoutes() {
           element={
             <LazyPage>
               <HistoryPage />
+            </LazyPage>
+          }
+        />
+        <Route
+          path={ROUTES.INTERVIEWS}
+          element={
+            <LazyPage>
+              <InterviewEventsPage />
             </LazyPage>
           }
         />

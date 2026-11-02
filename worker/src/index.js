@@ -1,3 +1,5 @@
+import { createGmailHandlers } from './gmail-routes.js'
+
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
 }
@@ -8,7 +10,7 @@ function json(data, status = 200, origin = '*') {
     headers: {
       ...JSON_HEADERS,
       'Access-Control-Allow-Origin': origin,
-      'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Max-Age': '86400',
     },
@@ -370,7 +372,13 @@ async function sendEmail(env, notification) {
     'MIME-Version: 1.0',
     'Content-Type: text/html; charset=UTF-8',
     '',
-    `<p>${notification.message}</p>`,
+    `<p>${String(notification.message)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+      .replace(/\n/g, '<br>')}</p>`,
   ].join('\r\n')
   const bytes = new TextEncoder().encode(rawMessage)
   let binary = ''
@@ -407,18 +415,39 @@ function getScheduledTime(timeZone) {
   }
 }
 
+const gmailHandlers = createGmailHandlers({
+  json,
+  getOrigin,
+  authenticatedUser,
+  hashValue,
+  parseTime,
+  normalizeChannel,
+  getScheduledTime,
+})
+
 async function processDueNotifications(env) {
   const due = await env.DB.prepare(
     `SELECT n.*, c.telegram_chat_id, c.telegram_notifications_enabled
        FROM notifications n
        LEFT JOIN user_channels c ON c.email = n.owner_email
-      WHERE n.status = 'PENDING'`
+      WHERE n.status = 'PENDING'
+         OR (n.status = 'PROCESSING' AND n.processing_started_at < datetime('now', '-10 minutes'))`
   ).all()
 
   for (const row of due.results.filter((item) => {
     const now = getScheduledTime(item.timezone || env.APP_TIME_ZONE || 'Asia/Kolkata')
     return item.scheduled_date === now.date && item.scheduled_time <= now.time
   })) {
+    const claimed = await env.DB.prepare(
+      `UPDATE notifications SET status = 'PROCESSING',
+         processing_started_at = CURRENT_TIMESTAMP
+        WHERE notification_id = ? AND (
+          status = 'PENDING' OR
+          (status = 'PROCESSING' AND processing_started_at < datetime('now', '-10 minutes'))
+        )`
+    ).bind(row.notification_id).run()
+    if (!claimed.meta.changes) continue
+
     try {
       const notification = mapNotification(row)
       const channel = normalizeChannel(notification.channel)
@@ -430,14 +459,24 @@ async function processDueNotifications(env) {
       }
       if (channel === 'GMAIL' || channel === 'BOTH') await sendEmail(env, notification)
       await env.DB.prepare(
-        `UPDATE notifications SET status = 'SENT', sent_at = CURRENT_TIMESTAMP, error_message = NULL
+        `UPDATE notifications SET status = 'SENT', sent_at = CURRENT_TIMESTAMP,
+           error_message = NULL, processing_started_at = NULL
+          WHERE notification_id = ? AND status = 'PROCESSING'`
+      ).bind(row.notification_id).run()
+      await env.DB.prepare(
+        `UPDATE interview_reminders SET status = 'SENT', updated_at = CURRENT_TIMESTAMP
           WHERE notification_id = ?`
       ).bind(row.notification_id).run()
     } catch (error) {
       await env.DB.prepare(
-        `UPDATE notifications SET status = 'FAILED', error_message = ?
-          WHERE notification_id = ?`
+        `UPDATE notifications SET status = 'FAILED', error_message = ?,
+           processing_started_at = NULL
+          WHERE notification_id = ? AND status = 'PROCESSING'`
       ).bind(error.message, row.notification_id).run()
+      await env.DB.prepare(
+        `UPDATE interview_reminders SET status = 'FAILED', updated_at = CURRENT_TIMESTAMP
+          WHERE notification_id = ?`
+      ).bind(row.notification_id).run()
     }
   }
 }
@@ -447,7 +486,7 @@ export default {
     const origin = getOrigin(request, env)
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: {
       'Access-Control-Allow-Origin': origin,
-      'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     } })
 
@@ -459,6 +498,34 @@ export default {
       if (url.pathname === '/auth/google' && request.method === 'POST') return await authenticateGoogle(request, env)
       if (url.pathname === '/notifications' && request.method === 'GET') return await listNotifications(request, env)
       if (url.pathname === '/notifications' && request.method === 'POST') return await createNotification(request, env)
+      if (url.pathname === '/gmail/connect' && request.method === 'POST') return await gmailHandlers.connect(request, env)
+      if (url.pathname === '/gmail/oauth/callback' && request.method === 'GET') return await gmailHandlers.callback(request, env)
+      if (url.pathname === '/gmail/connection' && request.method === 'GET') return await gmailHandlers.connectionStatus(request, env)
+      if (url.pathname === '/gmail/connection' && request.method === 'DELETE') return await gmailHandlers.disconnect(request, env)
+      if (url.pathname === '/gmail/sync' && request.method === 'POST') return await gmailHandlers.sync(request, env)
+      if (url.pathname === '/interview-events' && request.method === 'GET') return await gmailHandlers.events(request, env)
+      if (url.pathname.startsWith('/interview-events/')) {
+        const parts = url.pathname.split('/').filter(Boolean)
+        const eventId = parts[1]
+        if (parts.length === 2 && request.method === 'PATCH') {
+          return await gmailHandlers.updateEvent(request, env, eventId)
+        }
+        if (parts.length === 3 && parts[2] === 'confirm' && request.method === 'POST') {
+          return await gmailHandlers.confirmEvent(request, env, eventId)
+        }
+        if (parts.length === 3 && parts[2] === 'reject' && request.method === 'POST') {
+          return await gmailHandlers.rejectEvent(request, env, eventId)
+        }
+        if (parts.length === 2 && request.method === 'DELETE') {
+          return await gmailHandlers.deleteEvent(request, env, eventId)
+        }
+      }
+      if (url.pathname === '/user/preferences' && request.method === 'GET') {
+        return await gmailHandlers.preferences(request, env)
+      }
+      if (url.pathname === '/user/preferences' && request.method === 'PUT') {
+        return await gmailHandlers.updatePreferences(request, env)
+      }
       if (url.pathname.startsWith('/notifications/') && request.method === 'DELETE') {
         return await deleteNotification(request, env, url.pathname.split('/').pop())
       }
@@ -475,6 +542,7 @@ export default {
 
   async scheduled(_event, env, ctx) {
     ctx.waitUntil(processDueNotifications(env))
+    ctx.waitUntil(gmailHandlers.syncScheduled(env))
   },
 }
 

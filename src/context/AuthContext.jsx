@@ -41,14 +41,10 @@ export function AuthProvider({ children }) {
         
             setUser({
               ...profile,
-              gmailConnected: true,
               telegramConnected: telegramIsActive(status)
             })
           } catch {
-            setUser({
-              ...profile,
-              gmailConnected: true
-            })
+            setUser(profile)
           }
         })
         .catch(() => localStorage.removeItem(TOKEN_KEY))
@@ -70,12 +66,9 @@ export function AuthProvider({ children }) {
       JSON.stringify(u)
     )
   
-    setUser({
-      ...u,
-      gmailConnected: true
-    })
+    setUser(u)
     welcomeIfFirstLogin(u.email)
-    notify('Gmail connected', 'Your Gmail channel is connected and ready.')
+    notify('Account ready', 'Your account is ready to use CloudNotify.')
     return u
   }, [notify, welcomeIfFirstLogin])
 
@@ -84,16 +77,13 @@ export function AuthProvider({ children }) {
     const { user: u, token } = await authService.register(data)
     localStorage.setItem(TOKEN_KEY, token)
 localStorage.setItem('userEmail', u.email)
-setUser({
-  ...u,
-  gmailConnected: true
-})
+setUser(u)
 localStorage.setItem(
   'currentUser',
   JSON.stringify(u)
 )
 welcomeIfFirstLogin(u.email)
-notify('Gmail connected', 'Your Gmail channel is connected and ready.')
+notify('Account ready', 'Your account is ready to use CloudNotify.')
     return u
   }, [notify, welcomeIfFirstLogin])
 
@@ -116,11 +106,10 @@ notify('Gmail connected', 'Your Gmail channel is connected and ready.')
 
     setUser({
       ...googleUser,
-      gmailConnected: true,
       telegramConnected: false
     })
     welcomeIfFirstLogin(googleUser.email)
-    notify('Gmail connected', 'Your Gmail channel is connected and ready.')
+    notify('Signed in with Google', 'Connect Gmail separately if you want CloudNotify to review inbox messages.')
 
     channelService
       .getStatus(googleUser.email)

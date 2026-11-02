@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Sun, Sparkles } from 'lucide-react'
 import { useTheme } from '@/context/ThemeContext'
 import { useAuth } from '@/context/AuthContext'
@@ -7,12 +7,33 @@ import { Toggle } from '@/components/ui/Toggle'
 import { TIMEZONES, LANGUAGES } from '@/constants/config'
 import { cn } from '@/utils/cn'
 import { useLanguage } from '@/context/LanguageContext'
+import { gmailService } from '@/services/gmailService'
 
 export function SettingsPage() {
   const { appearance, setAppearance } = useTheme()
   const { user, updateUser } = useAuth()
   const { language, setLanguage, t } = useLanguage()
-  const [timezone, setTimezone] = useState(user?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC')
+  const initialTimezone = user?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  const [timezone, setTimezone] = useState(initialTimezone)
+  const [timezoneError, setTimezoneError] = useState('')
+
+  useEffect(() => {
+    let active = true
+    gmailService.getPreferences(initialTimezone)
+      .then((preferences) => {
+        if (!active) return
+        setTimezone(preferences.timezone)
+        updateUser({ timezone: preferences.timezone })
+      })
+      .catch((error) => {
+        if (active) {
+          setTimezoneError(error.response?.data?.error || 'Could not load your saved timezone.')
+        }
+      })
+    return () => {
+      active = false
+    }
+  }, [initialTimezone, updateUser])
 
   const appearanceOptions = [
     { value: 'normal', label: 'Normal', icon: Sun },
@@ -58,11 +79,17 @@ export function SettingsPage() {
           label={t('Time Zone')}
           value={timezone}
           onChange={(e) => {
-            setTimezone(e.target.value)
-            updateUser({ timezone: e.target.value })
+            const nextTimezone = e.target.value
+            setTimezone(nextTimezone)
+            updateUser({ timezone: nextTimezone })
+            setTimezoneError('')
+            gmailService.updatePreferences({ timezone: nextTimezone }).catch((error) => {
+              setTimezoneError(error.response?.data?.error || 'Could not save your timezone.')
+            })
           }}
-          options={TIMEZONES.map((tz) => ({ value: tz, label: tz }))}
+          options={[...new Set([...TIMEZONES, timezone])].map((tz) => ({ value: tz, label: tz }))}
         />
+        {timezoneError && <p className="text-sm text-red-500" role="alert">{timezoneError}</p>}
         <Select
           label={t('Language')}
           value={language}

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Menu, Bell, LogOut, User, Settings, ChevronDown } from 'lucide-react'
+import { Menu, X, Bell, LogOut, User, Settings, ChevronDown } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/utils/cn'
 import { ROUTES } from '@/constants/routes'
@@ -8,7 +8,7 @@ import { useLanguage } from '@/context/LanguageContext'
 import { useAppNotifications } from '@/context/NotificationContext'
 import SwipeRow from '@/components/ui/SwipeRow'
 
-export function Navbar({ onMenuClick }) {
+export function Navbar({ onMenuClick, sidebarOpen }) {
   const { user, logout } = useAuth()
   const { t } = useLanguage()
   const { items, unreadCount, markAllRead, removeNotification, restoreNotification, clearAll } = useAppNotifications()
@@ -16,6 +16,7 @@ export function Navbar({ onMenuClick }) {
   const [undoNotification, setUndoNotification] = useState(null)
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [dropdownMounted, setDropdownMounted] = useState(false)
   const dropdownRef = useRef(null)
   const notificationsRef = useRef(null)
   const undoTimerRef = useRef(null)
@@ -76,10 +77,11 @@ export function Navbar({ onMenuClick }) {
       <div className="flex h-full items-center justify-between px-4 lg:px-6">
         <button
           onClick={onMenuClick}
-          className="lg:hidden p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
-          aria-label="Open menu"
+          className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
+          aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={sidebarOpen}
         >
-          <Menu className="h-5 w-5" />
+          {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
 
         <div className="hidden lg:block" />
@@ -155,7 +157,14 @@ export function Navbar({ onMenuClick }) {
 
           <div className="relative" ref={dropdownRef}>
             <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
+              onClick={() => {
+                if (dropdownOpen) {
+                  setDropdownOpen(false)
+                } else {
+                  setDropdownMounted(true)
+                  setDropdownOpen(true)
+                }
+              }}
               className="flex items-center gap-2 rounded-xl p-1.5 pr-3 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               aria-expanded={dropdownOpen}
               aria-haspopup="true"
@@ -182,32 +191,53 @@ export function Navbar({ onMenuClick }) {
               <ChevronDown className={cn('h-4 w-4 text-slate-400 transition-transform', dropdownOpen && 'rotate-180')} />
             </button>
 
-            {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-56 overflow-hidden rounded-2xl border border-violet-300/60 bg-gradient-to-br from-violet-100 via-indigo-100 to-purple-100 py-2 shadow-xl shadow-violet-200/50 animate-scale-in dark:border-violet-800/70 dark:from-violet-950/80 dark:via-indigo-950/80 dark:to-purple-950/80 dark:shadow-black/20">
-                <div className="px-4 py-2 border-b border-violet-200/70 dark:border-violet-800/60">
-                  <p className="text-sm font-medium truncate">{user?.name}</p>
-                  <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+            {dropdownMounted && (
+              <div className="profile-menu-stack absolute right-0 mt-2 w-56" data-open={dropdownOpen} aria-hidden={!dropdownOpen}>
+                <div className="profile-menu-prelayers" aria-hidden="true">
+                  <div className="profile-menu-prelayer profile-menu-prelayer--one" />
+                  <div className="profile-menu-prelayer profile-menu-prelayer--two" />
                 </div>
-                <Link
-                  to={ROUTES.PROFILE}
-                  onClick={() => setDropdownOpen(false)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
+                <div
+                  className="profile-menu-panel relative z-10 overflow-hidden rounded-2xl border border-violet-300/60 bg-gradient-to-br from-violet-100 via-indigo-100 to-purple-100 py-2 shadow-xl shadow-violet-200/50 dark:border-violet-800/70 dark:from-violet-950/80 dark:via-indigo-950/80 dark:to-purple-950/80 dark:shadow-black/20"
+                  onAnimationEnd={(event) => {
+                    if (!dropdownOpen && event.animationName === 'profile-menu-panel-out') {
+                      setDropdownMounted(false)
+                    }
+                  }}
                 >
-                  <User className="h-4 w-4" /> {t('Profile')}
-                </Link>
-                <Link
-                  to={ROUTES.SETTINGS}
-                  onClick={() => setDropdownOpen(false)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
-                >
-                  <Settings className="h-4 w-4" /> {t('Settings')}
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
-                >
-                  <LogOut className="h-4 w-4" /> {t('Log out')}
-                </button>
+                  <div className="profile-menu-item-clip px-4 py-2 border-b border-violet-200/70 dark:border-violet-800/60">
+                    <div className="profile-menu-item">
+                      <p className="text-sm font-medium truncate">{user?.name}</p>
+                      <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+                    </div>
+                  </div>
+                  <Link
+                    to={ROUTES.PROFILE}
+                    onClick={() => setDropdownOpen(false)}
+                    className="profile-menu-item-clip flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
+                  >
+                    <span className="profile-menu-item inline-flex items-center gap-2">
+                      <User className="h-4 w-4" /> {t('Profile')}
+                    </span>
+                  </Link>
+                  <Link
+                    to={ROUTES.SETTINGS}
+                    onClick={() => setDropdownOpen(false)}
+                    className="profile-menu-item-clip flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
+                  >
+                    <span className="profile-menu-item inline-flex items-center gap-2">
+                      <Settings className="h-4 w-4" /> {t('Settings')}
+                    </span>
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="profile-menu-item-clip flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+                  >
+                    <span className="profile-menu-item inline-flex items-center gap-2">
+                      <LogOut className="h-4 w-4" /> {t('Log out')}
+                    </span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
