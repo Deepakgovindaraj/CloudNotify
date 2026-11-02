@@ -115,6 +115,39 @@ test('creates an authenticated draft and stores recipient validation per owner',
   ])
   assert.deepEqual(stored.results.map((recipient) => recipient.included), [0, 0, 0, 1])
   assert(stored.results[1].validation_errors.includes('joining date'))
+
+  const listed = await request(proxy, '/campaigns', 'GET')
+  assert.equal(listed.status, 200)
+  const campaigns = await listed.json()
+  assert.equal(campaigns.length, 1)
+  assert.equal(campaigns[0].campaignId, created.campaignId)
+  assert.equal(campaigns[0].includedRecipients, 1)
+
+  const detail = await request(proxy, `/campaigns/${created.campaignId}`, 'GET')
+  assert.equal(detail.status, 200)
+  const savedDraft = await detail.json()
+  assert.equal(savedDraft.recipients.length, 4)
+  assert.deepEqual(savedDraft.recipients[1].validationErrors, [
+    'Candidate name is required.',
+    'joining date must use YYYY-MM-DD format.',
+  ])
+  assert(savedDraft.recipients[2].validationErrors.includes('Email address is duplicated in this file.'))
+  assert.equal(savedDraft.recipients[3].data.job_role, 'Engineer')
+
+  const anotherEmail = 'other@example.test'
+  const anotherToken = 'different-owner-session'
+  await proxy.env.DB.prepare(
+    `INSERT INTO auth_sessions (token_hash, email, expires_at)
+     VALUES (?, ?, datetime('now', '+1 day'))`
+  ).bind(await hash(anotherToken), anotherEmail).run()
+  const privateDraft = await request(
+    proxy,
+    `/campaigns/${created.campaignId}`,
+    'GET',
+    undefined,
+    anotherToken
+  )
+  assert.equal(privateDraft.status, 404)
 })
 
 test('rejects invalid campaign metadata', async (t) => {

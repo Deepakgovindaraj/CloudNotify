@@ -510,8 +510,15 @@ export default {
       if (url.pathname === '/gmail/connection' && request.method === 'GET') return await gmailHandlers.connectionStatus(request, env)
       if (url.pathname === '/gmail/connection' && request.method === 'DELETE') return await gmailHandlers.disconnect(request, env)
       if (url.pathname === '/gmail/sync' && request.method === 'POST') return await gmailHandlers.sync(request, env)
-      if (url.pathname === '/campaigns' && request.method === 'POST') {
-        return await bulkCampaignHandlers.create(request, env)
+      if (url.pathname === '/campaigns') {
+        if (request.method === 'GET') return await bulkCampaignHandlers.list(request, env)
+        if (request.method === 'POST') return await bulkCampaignHandlers.create(request, env)
+      }
+      if (url.pathname.startsWith('/campaigns/') && request.method === 'GET') {
+        const campaignId = url.pathname.slice('/campaigns/'.length)
+        if (campaignId && !campaignId.includes('/')) {
+          return await bulkCampaignHandlers.get(request, env, decodeURIComponent(campaignId))
+        }
       }
       if (url.pathname === '/interview-events' && request.method === 'GET') return await gmailHandlers.events(request, env)
       if (url.pathname.startsWith('/interview-events/')) {

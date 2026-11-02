@@ -1,12 +1,15 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
+  CalendarDays,
   CheckCircle,
   Download,
+  Eye,
   FileSpreadsheet,
   MailPlus,
+  RefreshCw,
   Trash2,
   Upload,
 } from 'lucide-react'
@@ -71,6 +74,12 @@ function downloadReport(recipients) {
 
 export function BulkCampaignPage() {
   const fileInput = useRef(null)
+  const [mode, setMode] = useState('LIST')
+  const [campaignList, setCampaignList] = useState([])
+  const [selectedDraft, setSelectedDraft] = useState(null)
+  const [listLoading, setListLoading] = useState(true)
+  const [listError, setListError] = useState('')
+  const [detailLoading, setDetailLoading] = useState(false)
   const [step, setStep] = useState(1)
   const [campaign, setCampaign] = useState(INITIAL_CAMPAIGN)
   const [campaignError, setCampaignError] = useState('')
@@ -84,6 +93,55 @@ export function BulkCampaignPage() {
   const [filter, setFilter] = useState('ALL')
   const [saving, setSaving] = useState(false)
   const [savedCampaign, setSavedCampaign] = useState(null)
+
+  const loadCampaigns = async () => {
+    setListLoading(true)
+    setListError('')
+    try {
+      setCampaignList(await campaignService.getAll())
+    } catch (error) {
+      setListError(error.response?.data?.error || 'Could not load saved campaigns.')
+    } finally {
+      setListLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    let active = true
+    campaignService.getAll()
+      .then((campaigns) => {
+        if (active) setCampaignList(campaigns)
+      })
+      .catch((error) => {
+        if (active) {
+          setListError(error.response?.data?.error || 'Could not load saved campaigns.')
+        }
+      })
+      .finally(() => {
+        if (active) setListLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const openDraft = async (campaignId) => {
+    setDetailLoading(true)
+    setListError('')
+    try {
+      setSelectedDraft(await campaignService.getById(campaignId))
+      setMode('DETAIL')
+    } catch (error) {
+      setListError(error.response?.data?.error || 'Could not open this saved campaign.')
+    } finally {
+      setDetailLoading(false)
+    }
+  }
+
+  const startNewCampaign = () => {
+    resetCampaign()
+    setMode('CREATE')
+  }
 
   const { recipients, mappingErrors } = useMemo(
     () => mapCsvRecipients(headers, rows, mapping),
@@ -206,6 +264,7 @@ export function BulkCampaignPage() {
         })),
       })
       setSavedCampaign(result)
+      await loadCampaigns()
     } catch (error) {
       setCampaignError(
         error.response?.data?.error || 'Could not save this campaign draft. Please try again.'
@@ -231,19 +290,157 @@ export function BulkCampaignPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6 animate-fade-in">
       <header>
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-gradient-to-br from-primary-600 to-accent-500 p-3 text-white">
-            <MailPlus className="h-6 w-6" />
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-gradient-to-br from-primary-600 to-accent-500 p-3 text-white">
+              <MailPlus className="h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="font-display text-2xl font-bold">Bulk Delivery</h1>
+              <p className="mt-1 text-sm text-slate-500">
+                Create and review saved campaign drafts.
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-display text-2xl font-bold">Bulk Delivery</h1>
-            <p className="mt-1 text-sm text-slate-500">
-              Create a campaign draft and validate recipients before delivery.
-            </p>
-          </div>
+          {mode !== 'CREATE' && (
+            <Button onClick={startNewCampaign}>Create campaign</Button>
+          )}
         </div>
       </header>
 
+      {listError && <p className="text-sm text-red-500" role="alert">{listError}</p>}
+
+      {mode === 'LIST' && (
+        <section className="glass-card space-y-4 p-5 sm:p-7">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="font-display text-lg font-semibold">Saved campaigns</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Drafts are saved to your account and remain available when you return.
+              </p>
+            </div>
+            <Button variant="secondary" size="sm" icon={RefreshCw} onClick={loadCampaigns} loading={listLoading}>
+              Refresh
+            </Button>
+          </div>
+
+          {listLoading ? (
+            <p className="py-8 text-center text-sm text-slate-500">Loading saved campaigns…</p>
+          ) : campaignList.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-300 p-8 text-center dark:border-slate-700">
+              <MailPlus className="mx-auto h-8 w-8 text-slate-400" />
+              <p className="mt-3 font-medium">No campaign drafts yet</p>
+              <p className="mt-1 text-sm text-slate-500">Create a campaign to see it listed here.</p>
+              <Button className="mt-4" onClick={startNewCampaign}>Create campaign</Button>
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {campaignList.map((item) => (
+                <article
+                  key={item.campaignId}
+                  className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 p-4 dark:border-slate-700"
+                >
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-semibold">{item.campaignName}</h3>
+                      <span className="rounded-full bg-primary-500/10 px-2.5 py-0.5 text-xs font-medium text-primary-700 dark:text-primary-300">
+                        {item.status}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {item.organizationName} · {CAMPAIGN_TYPES.find(({ value }) => value === item.campaignType)?.label || item.campaignType}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                      <span>{item.includedRecipients} included / {item.totalRecipients} recipients</span>
+                      <span>{item.validRecipients} valid · {item.invalidRecipients} invalid</span>
+                      <span className="inline-flex items-center gap-1">
+                        <CalendarDays className="h-3.5 w-3.5" />
+                        {item.createdAt ? new Date(`${item.createdAt.replace(' ', 'T')}Z`).toLocaleString() : 'Date unavailable'}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={Eye}
+                    loading={detailLoading}
+                    onClick={() => openDraft(item.campaignId)}
+                  >
+                    View draft
+                  </Button>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {mode === 'DETAIL' && selectedDraft && (
+        <section className="glass-card space-y-5 p-5 sm:p-7">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-primary-600">{selectedDraft.status}</p>
+              <h2 className="mt-1 font-display text-xl font-semibold">{selectedDraft.campaignName}</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                {selectedDraft.organizationName} · {CAMPAIGN_TYPES.find(({ value }) => value === selectedDraft.campaignType)?.label || selectedDraft.campaignType}
+              </p>
+            </div>
+            <Button variant="secondary" icon={ArrowLeft} onClick={() => setMode('LIST')}>
+              Back to campaigns
+            </Button>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              ['Sender', `${selectedDraft.senderName} · ${selectedDraft.senderEmail}`],
+              ['Reply-to', selectedDraft.replyToEmail || 'Not set'],
+              ['Campaign date', selectedDraft.campaignDate || 'Not set'],
+              ['Created', selectedDraft.createdAt || 'Unknown'],
+              ['Description', selectedDraft.description || 'No description'],
+              ['Recipients', `${selectedDraft.recipients.filter((recipient) => recipient.included).length} included / ${selectedDraft.recipients.length} total`],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-xl bg-slate-100 p-4 dark:bg-slate-800/60">
+                <p className="text-xs text-slate-500">{label}</p>
+                <p className="mt-1 break-words text-sm font-medium">{value}</p>
+              </div>
+            ))}
+          </div>
+          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+            <table className="w-full min-w-[680px] text-left text-sm">
+              <thead className="bg-slate-100 text-xs uppercase text-slate-500 dark:bg-slate-800">
+                <tr>
+                  <th className="p-3">Include</th>
+                  <th className="p-3">Candidate</th>
+                  <th className="p-3">Email</th>
+                  <th className="p-3">Validation</th>
+                  <th className="p-3">Recipient data</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedDraft.recipients.map((recipient) => (
+                  <tr key={recipient.recipientId} className="border-t border-slate-200 align-top dark:border-slate-700">
+                    <td className="p-3">{recipient.included ? 'Included' : 'Excluded'}</td>
+                    <td className="p-3">{recipient.candidateName || '—'}</td>
+                    <td className="p-3">{recipient.email || '—'}</td>
+                    <td className="p-3">
+                      {recipient.validationErrors.length
+                        ? <span className="text-xs text-red-500">{recipient.validationErrors.join(' ')}</span>
+                        : <span className="text-xs text-emerald-600">Valid</span>}
+                    </td>
+                    <td className="max-w-xs p-3 text-xs text-slate-500">
+                      {Object.entries(recipient.data).map(([key, value]) => `${key}: ${value}`).join(' · ') || '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
+            <p className="font-semibold">Saved draft only — no emails have been sent.</p>
+          </div>
+        </section>
+      )}
+
+      {mode === 'CREATE' && <>
       <div className="grid grid-cols-3 gap-2" aria-label="Campaign setup progress">
         {['Campaign information', 'Recipients', 'Review draft'].map((label, index) => {
           const currentStep = index + 1
@@ -276,7 +473,15 @@ export function BulkCampaignPage() {
             {' '}and {savedCampaign.invalidRecipients} invalid. No emails were sent.
           </p>
           <p className="text-xs text-slate-500">Draft ID: {savedCampaign.campaignId}</p>
-          <Button onClick={resetCampaign}>Create another campaign</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" icon={Eye} onClick={() => openDraft(savedCampaign.campaignId)}>
+              View saved campaign
+            </Button>
+            <Button variant="secondary" onClick={() => setMode('LIST')}>
+              All campaigns
+            </Button>
+            <Button onClick={startNewCampaign}>Create another campaign</Button>
+          </div>
         </section>
       ) : (
         <section className="glass-card space-y-6 p-5 sm:p-7">
@@ -613,6 +818,7 @@ export function BulkCampaignPage() {
           )}
         </section>
       )}
+      </>}
     </div>
   )
 }

@@ -37,6 +37,91 @@ function safeRecipientData(value) {
 }
 
 export function createBulkCampaignHandlers({ json, getOrigin, authenticatedUser }) {
+  async function list(request, env) {
+    const origin = getOrigin(request, env)
+    const user = await authenticatedUser(request, env)
+    if (!user) return json({ error: 'Authentication is required' }, 401, origin)
+
+    const result = await env.DB.prepare(
+      `SELECT c.campaign_id, c.campaign_name, c.organization_name, c.campaign_type,
+              c.sender_name, c.sender_email, c.status, c.created_at, c.campaign_date,
+              COUNT(r.recipient_id) AS total_recipients,
+              SUM(CASE WHEN r.validation_status = 'VALID' THEN 1 ELSE 0 END) AS valid_recipients,
+              SUM(CASE WHEN r.validation_status = 'INVALID' THEN 1 ELSE 0 END) AS invalid_recipients,
+              SUM(CASE WHEN r.included = 1 THEN 1 ELSE 0 END) AS included_recipients
+         FROM bulk_campaigns c
+         LEFT JOIN bulk_campaign_recipients r ON r.campaign_id = c.campaign_id
+        WHERE c.owner_email = ?
+        GROUP BY c.campaign_id
+        ORDER BY c.created_at DESC
+        LIMIT 100`
+    ).bind(user.email).all()
+
+    return json(result.results.map((row) => ({
+      campaignId: row.campaign_id,
+      campaignName: row.campaign_name,
+      organizationName: row.organization_name,
+      campaignType: row.campaign_type,
+      senderName: row.sender_name,
+      senderEmail: row.sender_email,
+      status: row.status,
+      createdAt: row.created_at,
+      campaignDate: row.campaign_date,
+      totalRecipients: row.total_recipients,
+      validRecipients: row.valid_recipients,
+      invalidRecipients: row.invalid_recipients,
+      includedRecipients: row.included_recipients,
+    })), 200, origin)
+  }
+
+  async function get(request, env, campaignId) {
+    const origin = getOrigin(request, env)
+    const user = await authenticatedUser(request, env)
+    if (!user) return json({ error: 'Authentication is required' }, 401, origin)
+
+    const campaign = await env.DB.prepare(
+      `SELECT campaign_id, campaign_name, campaign_description, organization_name,
+              campaign_type, sender_name, sender_email, reply_to_email, campaign_date,
+              status, created_at, updated_at
+         FROM bulk_campaigns
+        WHERE campaign_id = ? AND owner_email = ?`
+    ).bind(campaignId, user.email).first()
+    if (!campaign) return json({ error: 'Campaign not found' }, 404, origin)
+
+    const result = await env.DB.prepare(
+      `SELECT recipient_id, row_number, candidate_name, email, recipient_data,
+              validation_status, validation_errors, included
+         FROM bulk_campaign_recipients
+        WHERE campaign_id = ?
+        ORDER BY row_number`
+    ).bind(campaignId).all()
+
+    return json({
+      campaignId: campaign.campaign_id,
+      campaignName: campaign.campaign_name,
+      description: campaign.campaign_description,
+      organizationName: campaign.organization_name,
+      campaignType: campaign.campaign_type,
+      senderName: campaign.sender_name,
+      senderEmail: campaign.sender_email,
+      replyToEmail: campaign.reply_to_email,
+      campaignDate: campaign.campaign_date,
+      status: campaign.status,
+      createdAt: campaign.created_at,
+      updatedAt: campaign.updated_at,
+      recipients: result.results.map((row) => ({
+        recipientId: row.recipient_id,
+        rowNumber: row.row_number,
+        candidateName: row.candidate_name,
+        email: row.email,
+        data: JSON.parse(row.recipient_data),
+        validationStatus: row.validation_status,
+        validationErrors: JSON.parse(row.validation_errors),
+        included: Boolean(row.included),
+      })),
+    }, 200, origin)
+  }
+
   async function create(request, env) {
     const origin = getOrigin(request, env)
     const user = await authenticatedUser(request, env)
@@ -187,5 +272,5 @@ export function createBulkCampaignHandlers({ json, getOrigin, authenticatedUser 
     }, 201, origin)
   }
 
-  return { create }
+  return { create, list, get }
 }
