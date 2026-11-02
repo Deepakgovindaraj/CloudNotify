@@ -15,4 +15,12 @@ export const campaignService = {
     const response = await api.post('/campaigns', campaign)
     return response.data
   },
+
+  async updateTemplates(campaignId, templates) {
+    const response = await api.patch(
+      `/campaigns/${encodeURIComponent(campaignId)}`,
+      templates
+    )
+    return response.data
+  },
 }

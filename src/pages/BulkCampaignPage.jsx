@@ -15,7 +15,10 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input, Select, Textarea } from '@/components/ui/Input'
+import { CampaignTemplateEditor } from '@/components/bulk/CampaignTemplateEditor'
 import { campaignService } from '@/services/campaignService'
+import { downloadCampaignPdf } from '@/utils/campaignPdf'
+import { getCampaignTemplate } from '@/utils/campaignTemplates'
 import {
   createValidationReportCsv,
   mapCsvRecipients,
@@ -93,6 +96,12 @@ export function BulkCampaignPage() {
   const [filter, setFilter] = useState('ALL')
   const [saving, setSaving] = useState(false)
   const [savedCampaign, setSavedCampaign] = useState(null)
+  const [templates, setTemplates] = useState(() => getCampaignTemplate(INITIAL_CAMPAIGN.campaignType))
+  const [savingTemplates, setSavingTemplates] = useState(false)
+  const [templateError, setTemplateError] = useState('')
+  const [templatesSaved, setTemplatesSaved] = useState(false)
+  const [pdfGenerating, setPdfGenerating] = useState(false)
+  const [pdfError, setPdfError] = useState('')
 
   const loadCampaigns = async () => {
     setListLoading(true)
@@ -129,7 +138,19 @@ export function BulkCampaignPage() {
     setDetailLoading(true)
     setListError('')
     try {
-      setSelectedDraft(await campaignService.getById(campaignId))
+      const draft = await campaignService.getById(campaignId)
+      setSelectedDraft(draft)
+      const savedTemplates = {
+        emailSubject: draft.emailSubject || '',
+        emailBody: draft.emailBody || '',
+        documentTitle: draft.documentTitle || '',
+        documentBody: draft.documentBody || '',
+      }
+      setTemplates(Object.values(savedTemplates).some(Boolean)
+        ? savedTemplates
+        : getCampaignTemplate(draft.campaignType))
+      setTemplateError('')
+      setTemplatesSaved(false)
       setMode('DETAIL')
     } catch (error) {
       setListError(error.response?.data?.error || 'Could not open this saved campaign.')
@@ -164,7 +185,44 @@ export function BulkCampaignPage() {
 
   const updateCampaign = (field) => (event) => {
     setCampaign((current) => ({ ...current, [field]: event.target.value }))
+    if (field === 'campaignType') {
+      setTemplates(getCampaignTemplate(event.target.value))
+    }
     setCampaignError('')
+  }
+
+  const updateTemplate = (field, value) => {
+    setTemplates((current) => ({ ...current, [field]: value }))
+    setTemplatesSaved(false)
+  }
+
+  const downloadPdfs = async (campaignDetails, campaignRecipients) => {
+    setPdfGenerating(true)
+    setPdfError('')
+    await new Promise((resolve) => window.requestAnimationFrame(resolve))
+    try {
+      downloadCampaignPdf(campaignDetails, campaignRecipients, templates)
+    } catch (error) {
+      setPdfError(error.message || 'Could not generate the personalized PDF.')
+    } finally {
+      setPdfGenerating(false)
+    }
+  }
+
+  const saveSavedTemplates = async () => {
+    if (!selectedDraft) return
+    setSavingTemplates(true)
+    setTemplateError('')
+    setTemplatesSaved(false)
+    try {
+      const result = await campaignService.updateTemplates(selectedDraft.campaignId, templates)
+      setSelectedDraft((current) => ({ ...current, ...result }))
+      setTemplatesSaved(true)
+    } catch (error) {
+      setTemplateError(error.response?.data?.error || 'Could not save these templates.')
+    } finally {
+      setSavingTemplates(false)
+    }
   }
 
   const validateCampaign = () => {
@@ -258,6 +316,7 @@ export function BulkCampaignPage() {
     try {
       const result = await campaignService.createDraft({
         ...campaign,
+        ...templates,
         recipients: recipients.map((recipient) => ({
           ...recipient,
           included: includedRows.has(recipient.rowNumber),
@@ -277,6 +336,7 @@ export function BulkCampaignPage() {
   const resetCampaign = () => {
     setStep(1)
     setCampaign(INITIAL_CAMPAIGN)
+    setTemplates(getCampaignTemplate(INITIAL_CAMPAIGN.campaignType))
     setCampaignError('')
     setFileError('')
     setFileName('')
@@ -285,6 +345,9 @@ export function BulkCampaignPage() {
     setMapping({})
     setIncludedRows(new Set())
     setSavedCampaign(null)
+    setTemplateError('')
+    setTemplatesSaved(false)
+    setPdfError('')
   }
 
   return (
@@ -298,7 +361,7 @@ export function BulkCampaignPage() {
             <div>
               <h1 className="font-display text-2xl font-bold">Bulk Delivery</h1>
               <p className="mt-1 text-sm text-slate-500">
-                Create and review saved campaign drafts.
+                Personalize campaign messages and prepare recipient documents. Sending is not available in this phase.
               </p>
             </div>
           </div>
@@ -404,6 +467,35 @@ export function BulkCampaignPage() {
               </div>
             ))}
           </div>
+          <CampaignTemplateEditor
+            campaign={selectedDraft}
+            recipients={selectedDraft.recipients}
+            templates={templates}
+            onChange={updateTemplate}
+            onTemplatesChange={(nextTemplates) => {
+              setTemplates(nextTemplates)
+              setTemplatesSaved(false)
+            }}
+            onDownload={() => downloadPdfs(
+              selectedDraft,
+              selectedDraft.recipients.filter((recipient) =>
+                recipient.included && recipient.validationStatus === 'VALID'
+              )
+            )}
+            downloading={pdfGenerating}
+            downloadError={pdfError}
+          />
+          {templateError && <p className="text-sm text-red-500" role="alert">{templateError}</p>}
+          {templatesSaved && (
+            <p className="text-sm text-emerald-600 dark:text-emerald-400" role="status">
+              Message and document templates saved to this campaign.
+            </p>
+          )}
+          <div className="flex justify-end">
+            <Button loading={savingTemplates} onClick={saveSavedTemplates}>
+              Save templates
+            </Button>
+          </div>
           <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
             <table className="w-full min-w-[680px] text-left text-sm">
               <thead className="bg-slate-100 text-xs uppercase text-slate-500 dark:bg-slate-800">
@@ -435,7 +527,7 @@ export function BulkCampaignPage() {
             </table>
           </div>
           <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
-            <p className="font-semibold">Saved draft only — no emails have been sent.</p>
+            <p className="font-semibold">Campaign preparation only — no emails have been sent.</p>
           </div>
         </section>
       )}
@@ -704,7 +796,6 @@ export function BulkCampaignPage() {
                       </Button>
                     </div>
                   </div>
-
                   <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
                     <table className="w-full min-w-[680px] text-left text-sm">
                       <thead className="bg-slate-100 text-xs uppercase text-slate-500 dark:bg-slate-800">
@@ -788,10 +879,20 @@ export function BulkCampaignPage() {
                   </div>
                 ))}
               </div>
+              <CampaignTemplateEditor
+                campaign={campaign}
+                recipients={selectedRecipients}
+                templates={templates}
+                onChange={updateTemplate}
+                onTemplatesChange={setTemplates}
+                onDownload={() => downloadPdfs(campaign, selectedRecipients)}
+                downloading={pdfGenerating}
+                downloadError={pdfError}
+              />
               <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
                 <p className="font-semibold">Draft only — no emails will be sent.</p>
                 <p className="mt-1 text-slate-500">
-                  Email templates, document generation, approvals, and delivery are planned for later phases.
+                  Preview the personalized message and download a PDF for each included recipient. Messages are not sent.
                 </p>
               </div>
               <div>

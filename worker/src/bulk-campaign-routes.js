@@ -82,6 +82,7 @@ export function createBulkCampaignHandlers({ json, getOrigin, authenticatedUser 
     const campaign = await env.DB.prepare(
       `SELECT campaign_id, campaign_name, campaign_description, organization_name,
               campaign_type, sender_name, sender_email, reply_to_email, campaign_date,
+              email_subject, email_body, document_title, document_body,
               status, created_at, updated_at
          FROM bulk_campaigns
         WHERE campaign_id = ? AND owner_email = ?`
@@ -106,6 +107,10 @@ export function createBulkCampaignHandlers({ json, getOrigin, authenticatedUser 
       senderEmail: campaign.sender_email,
       replyToEmail: campaign.reply_to_email,
       campaignDate: campaign.campaign_date,
+      emailSubject: campaign.email_subject,
+      emailBody: campaign.email_body,
+      documentTitle: campaign.document_title,
+      documentBody: campaign.document_body,
       status: campaign.status,
       createdAt: campaign.created_at,
       updatedAt: campaign.updated_at,
@@ -154,6 +159,10 @@ export function createBulkCampaignHandlers({ json, getOrigin, authenticatedUser 
     const campaignType = String(body.campaignType || '')
     const campaignDate = String(body.campaignDate || '')
     const description = String(body.description || '').trim()
+    const emailSubject = body.emailSubject ?? ''
+    const emailBody = body.emailBody ?? ''
+    const documentTitle = body.documentTitle ?? ''
+    const documentBody = body.documentBody ?? ''
 
     if (!campaignName || campaignName.length > 120 ||
         !organizationName || organizationName.length > 120 ||
@@ -162,7 +171,11 @@ export function createBulkCampaignHandlers({ json, getOrigin, authenticatedUser 
         (replyToEmail && !validEmail(replyToEmail)) ||
         !CAMPAIGN_TYPES.has(campaignType) ||
         (campaignDate && !validDate(campaignDate)) ||
-        description.length > 2000) {
+        description.length > 2000 ||
+        typeof emailSubject !== 'string' || emailSubject.length > 200 ||
+        typeof emailBody !== 'string' || emailBody.length > 10000 ||
+        typeof documentTitle !== 'string' || documentTitle.length > 200 ||
+        typeof documentBody !== 'string' || documentBody.length > 20000) {
       return json({ error: 'Enter valid campaign, organization, sender, and date details.' }, 400, origin)
     }
 
@@ -231,8 +244,9 @@ export function createBulkCampaignHandlers({ json, getOrigin, authenticatedUser 
         `INSERT INTO bulk_campaigns
           (campaign_id, owner_email, campaign_name, campaign_description,
            organization_name, campaign_type, sender_name, sender_email,
-           reply_to_email, campaign_date)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+           reply_to_email, campaign_date, email_subject, email_body,
+           document_title, document_body)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).bind(
         campaignId,
         user.email,
@@ -243,7 +257,11 @@ export function createBulkCampaignHandlers({ json, getOrigin, authenticatedUser 
         senderName,
         senderEmail,
         replyToEmail || null,
-        campaignDate || null
+        campaignDate || null,
+        emailSubject,
+        emailBody,
+        documentTitle,
+        documentBody
       ),
       env.DB.prepare(
         `INSERT INTO bulk_campaign_recipients
@@ -272,5 +290,70 @@ export function createBulkCampaignHandlers({ json, getOrigin, authenticatedUser 
     }, 201, origin)
   }
 
-  return { create, list, get }
+  async function updateTemplates(request, env, campaignId) {
+    const origin = getOrigin(request, env)
+    const user = await authenticatedUser(request, env)
+    if (!user) return json({ error: 'Authentication is required' }, 401, origin)
+
+    const contentLength = Number(request.headers.get('Content-Length') || 0)
+    if (contentLength > 50 * 1024) {
+      return json({ error: 'Template data exceeds the upload limit.' }, 413, origin)
+    }
+
+    const rawBody = await request.text()
+    if (rawBody.length > 50 * 1024) {
+      return json({ error: 'Template data exceeds the upload limit.' }, 413, origin)
+    }
+
+    let body
+    try {
+      body = JSON.parse(rawBody)
+    } catch {
+      return json({ error: 'Request body must be valid JSON.' }, 400, origin)
+    }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return json({ error: 'Request body must be a JSON object.' }, 400, origin)
+    }
+
+    const fields = {
+      emailSubject: { column: 'email_subject', max: 200 },
+      emailBody: { column: 'email_body', max: 10000 },
+      documentTitle: { column: 'document_title', max: 200 },
+      documentBody: { column: 'document_body', max: 20000 },
+    }
+    for (const [field, { max }] of Object.entries(fields)) {
+      if (typeof body[field] !== 'string' || body[field].length > max) {
+        return json({ error: `${field} must be a string no longer than ${max} characters.` }, 400, origin)
+      }
+    }
+
+    const campaign = await env.DB.prepare(
+      'SELECT campaign_id FROM bulk_campaigns WHERE campaign_id = ? AND owner_email = ?'
+    ).bind(campaignId, user.email).first()
+    if (!campaign) return json({ error: 'Campaign not found' }, 404, origin)
+
+    await env.DB.prepare(
+      `UPDATE bulk_campaigns
+          SET email_subject = ?, email_body = ?, document_title = ?, document_body = ?,
+              updated_at = CURRENT_TIMESTAMP
+        WHERE campaign_id = ? AND owner_email = ?`
+    ).bind(
+      body.emailSubject,
+      body.emailBody,
+      body.documentTitle,
+      body.documentBody,
+      campaignId,
+      user.email
+    ).run()
+
+    return json({
+      campaignId,
+      emailSubject: body.emailSubject,
+      emailBody: body.emailBody,
+      documentTitle: body.documentTitle,
+      documentBody: body.documentBody,
+    }, 200, origin)
+  }
+
+  return { create, list, get, updateTemplates }
 }

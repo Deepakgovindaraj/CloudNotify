@@ -15,7 +15,7 @@ A modern, production-ready React frontend for **CloudNotify** — a Serverless M
 - Create notifications with date/time, channels, and recurrence
 - History with search, filter, sort, and pagination
 - Profile and settings pages
-- Bulk Delivery campaign drafts with CSV column mapping and recipient validation
+- Bulk Delivery campaigns with CSV validation, personalized message templates, and PDF generation
 - Cloudflare Pages frontend with a Cloudflare Worker API
 - Cloudflare D1 persistence and scheduled notification delivery
 
@@ -99,11 +99,18 @@ notifications run in the timezone selected in Settings.
 Telegram webhook. The Profile page now creates a short-lived, single-use
 Telegram connection code.
 
-Bulk Delivery Phase 1 stores authenticated campaign drafts and validated
-recipient rows in D1. Apply the current migrations before using this feature.
-CSV files are parsed in the browser, limited to 256 KB and 500 rows, and are
-not retained as uploaded files. Draft creation does not send email; document
-generation, approvals, and delivery are separate future phases.
+Bulk Delivery stores authenticated campaign drafts, validated recipient rows,
+and per-campaign message/document templates in D1. Apply the current migrations
+before using this feature. CSV files are parsed in the browser, limited to 256 KB
+and 500 rows, and are not retained as uploaded files. Phase 2 supports previewing
+personalized message text and downloading a combined PDF with one personalized
+document per included, valid recipient. PDF generation runs in the browser; it
+does not upload or persist generated files. No messages are sent in this phase;
+approval and delivery remain future work.
+
+Template fields accept placeholders such as `{{candidate_name}}`,
+`{{organization_name}}`, `{{campaign_date}}`, `{{sender_name}}`, and mapped CSV
+column names (for example `{{job_role}}`).
 
 ### Gmail Intelligence (read-only mailbox connection)
 

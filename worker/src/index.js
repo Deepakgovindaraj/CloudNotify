@@ -514,10 +514,13 @@ export default {
         if (request.method === 'GET') return await bulkCampaignHandlers.list(request, env)
         if (request.method === 'POST') return await bulkCampaignHandlers.create(request, env)
       }
-      if (url.pathname.startsWith('/campaigns/') && request.method === 'GET') {
+      if (url.pathname.startsWith('/campaigns/') &&
+          ['GET', 'PATCH'].includes(request.method)) {
         const campaignId = url.pathname.slice('/campaigns/'.length)
         if (campaignId && !campaignId.includes('/')) {
-          return await bulkCampaignHandlers.get(request, env, decodeURIComponent(campaignId))
+          const decodedId = decodeURIComponent(campaignId)
+          if (request.method === 'GET') return await bulkCampaignHandlers.get(request, env, decodedId)
+          return await bulkCampaignHandlers.updateTemplates(request, env, decodedId)
         }
       }
       if (url.pathname === '/interview-events' && request.method === 'GET') return await gmailHandlers.events(request, env)

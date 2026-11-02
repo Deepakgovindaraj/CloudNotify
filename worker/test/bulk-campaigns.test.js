@@ -53,6 +53,10 @@ test('creates an authenticated draft and stores recipient validation per owner',
     campaignType: 'OFFER_LETTERS',
     senderName: 'HR Team',
     senderEmail: 'hr@example.test',
+    emailSubject: 'Offer for {{candidate_name}}',
+    emailBody: 'Hello {{candidate_name}}',
+    documentTitle: 'Offer Letter',
+    documentBody: 'Dear {{candidate_name}}, welcome to {{organization_name}}.',
     recipients: [
       {
         rowNumber: 2,
@@ -133,6 +137,10 @@ test('creates an authenticated draft and stores recipient validation per owner',
   ])
   assert(savedDraft.recipients[2].validationErrors.includes('Email address is duplicated in this file.'))
   assert.equal(savedDraft.recipients[3].data.job_role, 'Engineer')
+  assert.equal(savedDraft.emailSubject, 'Offer for {{candidate_name}}')
+  assert.equal(savedDraft.emailBody, 'Hello {{candidate_name}}')
+  assert.equal(savedDraft.documentTitle, 'Offer Letter')
+  assert.equal(savedDraft.documentBody, 'Dear {{candidate_name}}, welcome to {{organization_name}}.')
 
   const anotherEmail = 'other@example.test'
   const anotherToken = 'different-owner-session'
@@ -148,6 +156,54 @@ test('creates an authenticated draft and stores recipient validation per owner',
     anotherToken
   )
   assert.equal(privateDraft.status, 404)
+
+  const updatedTemplates = {
+    emailSubject: 'Updated subject',
+    emailBody: 'Updated message',
+    documentTitle: 'Updated document',
+    documentBody: 'Updated body',
+  }
+  const updateResponse = await request(
+    proxy,
+    `/campaigns/${created.campaignId}`,
+    'PATCH',
+    updatedTemplates
+  )
+  assert.equal(updateResponse.status, 200)
+  assert.deepEqual(await updateResponse.json(), {
+    campaignId: created.campaignId,
+    ...updatedTemplates,
+  })
+  const unauthenticatedTemplateUpdate = await request(
+    proxy,
+    `/campaigns/${created.campaignId}`,
+    'PATCH',
+    updatedTemplates,
+    ''
+  )
+  assert.equal(unauthenticatedTemplateUpdate.status, 401)
+
+  const oversizedTemplateUpdate = await request(
+    proxy,
+    `/campaigns/${created.campaignId}`,
+    'PATCH',
+    { ...updatedTemplates, documentBody: 'x'.repeat(20001) }
+  )
+  assert.equal(oversizedTemplateUpdate.status, 400)
+
+  const privateTemplateUpdate = await request(
+    proxy,
+    `/campaigns/${created.campaignId}`,
+    'PATCH',
+    updatedTemplates,
+    anotherToken
+  )
+  assert.equal(privateTemplateUpdate.status, 404)
+
+  const updatedDraftResponse = await request(proxy, `/campaigns/${created.campaignId}`, 'GET')
+  const updatedDraft = await updatedDraftResponse.json()
+  assert.equal(updatedDraft.emailSubject, 'Updated subject')
+  assert.equal(updatedDraft.documentBody, 'Updated body')
 })
 
 test('rejects invalid campaign metadata', async (t) => {
