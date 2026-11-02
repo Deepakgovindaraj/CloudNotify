@@ -7,6 +7,7 @@ import {
   Settings,
   Cloud,
   CalendarDays,
+  MailPlus,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { APP_NAME } from '@/constants/config'
@@ -20,6 +21,7 @@ const iconMap = {
   User,
   Settings,
   CalendarDays,
+  MailPlus,
 }
 
 const navItems = [
@@ -27,6 +29,7 @@ const navItems = [
   { label: 'Create Notification', path: ROUTES.CREATE, icon: 'PlusCircle' },
   { label: 'History', path: ROUTES.HISTORY, icon: 'History' },
   { label: 'Interview Events', path: ROUTES.INTERVIEWS, icon: 'CalendarDays' },
+  { label: 'Bulk Delivery', path: ROUTES.BULK_DELIVERY, icon: 'MailPlus' },
   { label: 'Profile', path: ROUTES.PROFILE, icon: 'User' },
   { label: 'Settings', path: ROUTES.SETTINGS, icon: 'Settings' },
 ]

@@ -1,4 +1,5 @@
 import { createGmailHandlers } from './gmail-routes.js'
+import { createBulkCampaignHandlers } from './bulk-campaign-routes.js'
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
@@ -425,6 +426,12 @@ const gmailHandlers = createGmailHandlers({
   getScheduledTime,
 })
 
+const bulkCampaignHandlers = createBulkCampaignHandlers({
+  json,
+  getOrigin,
+  authenticatedUser,
+})
+
 async function processDueNotifications(env) {
   const due = await env.DB.prepare(
     `SELECT n.*, c.telegram_chat_id, c.telegram_notifications_enabled
@@ -503,6 +510,9 @@ export default {
       if (url.pathname === '/gmail/connection' && request.method === 'GET') return await gmailHandlers.connectionStatus(request, env)
       if (url.pathname === '/gmail/connection' && request.method === 'DELETE') return await gmailHandlers.disconnect(request, env)
       if (url.pathname === '/gmail/sync' && request.method === 'POST') return await gmailHandlers.sync(request, env)
+      if (url.pathname === '/campaigns' && request.method === 'POST') {
+        return await bulkCampaignHandlers.create(request, env)
+      }
       if (url.pathname === '/interview-events' && request.method === 'GET') return await gmailHandlers.events(request, env)
       if (url.pathname.startsWith('/interview-events/')) {
         const parts = url.pathname.split('/').filter(Boolean)

@@ -17,6 +17,9 @@ const InterviewEventsPage = lazy(() =>
 )
 const ProfilePage = lazy(() => import('@/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })))
 const SettingsPage = lazy(() => import('@/pages/SettingsPage').then((m) => ({ default: m.SettingsPage })))
+const BulkCampaignPage = lazy(() =>
+  import('@/pages/BulkCampaignPage').then((m) => ({ default: m.BulkCampaignPage }))
+)
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth()
@@ -104,6 +107,14 @@ export function AppRoutes() {
           element={
             <LazyPage>
               <InterviewEventsPage />
+            </LazyPage>
+          }
+        />
+        <Route
+          path={ROUTES.BULK_DELIVERY}
+          element={
+            <LazyPage>
+              <BulkCampaignPage />
             </LazyPage>
           }
         />

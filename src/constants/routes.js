@@ -6,6 +6,7 @@ export const ROUTES = {
   PROFILE: '/profile',
   SETTINGS: '/settings',
   INTERVIEWS: '/interviews',
+  BULK_DELIVERY: '/bulk-delivery',
 }
 
 export const NAV_ITEMS = [
