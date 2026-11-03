@@ -57,6 +57,7 @@ function mapNotification(row) {
     recurring: Boolean(row.recurring),
     recurrence: row.recurrence,
     status: row.status,
+    errorMessage: row.error_message || null,
   }
 }
 
@@ -214,7 +215,8 @@ async function listNotifications(request, env) {
   if (!user) return json({ error: 'Authentication is required' }, 401, getOrigin(request, env))
   const result = await env.DB.prepare(
     `SELECT notification_id, title, message, recipient_email, owner_email,
-            scheduled_date, scheduled_time, timezone, channel, recurring, recurrence, status
+            scheduled_date, scheduled_time, timezone, channel, recurring, recurrence,
+            status, error_message
        FROM notifications
       WHERE owner_email = ?
       ORDER BY scheduled_date DESC, scheduled_time DESC`
@@ -415,8 +417,11 @@ async function sendEmail(env, notification) {
       grant_type: 'refresh_token',
     }),
   })
-  if (!tokenResponse.ok) throw new Error(`Gmail token exchange failed with HTTP ${tokenResponse.status}`)
+  if (!tokenResponse.ok) {
+    throw new Error(await googleRequestError(tokenResponse, 'Gmail token exchange'))
+  }
   const { access_token: accessToken } = await tokenResponse.json()
+  if (!accessToken) throw new Error('Gmail token exchange returned no access token')
   const safeSubject = String(notification.title).replace(/[\r\n]+/g, ' ').trim()
   const safeSender = String(env.GMAIL_SENDER).replace(/[\r\n]+/g, ' ').trim()
   const rawMessage = [
@@ -449,7 +454,24 @@ async function sendEmail(env, notification) {
     },
     body: JSON.stringify({ raw: encodedMessage }),
   })
-  if (!response.ok) throw new Error(`Gmail delivery failed with HTTP ${response.status}`)
+  if (!response.ok) throw new Error(await googleRequestError(response, 'Gmail delivery'))
+}
+
+async function googleRequestError(response, action) {
+  let code = ''
+  try {
+    const body = await response.json()
+    const providerError = body.error
+    const candidate = typeof providerError === 'string'
+      ? providerError
+      : providerError?.errors?.[0]?.reason || providerError?.status
+    if (typeof candidate === 'string' && /^[a-z0-9_.-]{1,80}$/i.test(candidate)) {
+      code = ` (${candidate})`
+    }
+  } catch {
+    // Keep the HTTP status when the provider response is not JSON.
+  }
+  return `${action} failed with HTTP ${response.status}${code}`
 }
 
 function getScheduledTime(timeZone) {
@@ -498,6 +520,7 @@ async function processDueNotifications(env) {
     ).bind(row.notification_id).run()
     if (!claimed.meta.changes) continue
 
+    let telegramDelivered = false
     try {
       const notification = mapNotification(row)
       const channel = normalizeChannel(notification.channel)
@@ -506,6 +529,7 @@ async function processDueNotifications(env) {
           throw new Error('Telegram notifications are not available for this account')
         }
         await sendTelegram(env, row.telegram_chat_id, notification)
+        telegramDelivered = true
       }
       if (channel === 'GMAIL' || channel === 'BOTH') await sendEmail(env, notification)
       await env.DB.prepare(
@@ -514,11 +538,14 @@ async function processDueNotifications(env) {
           WHERE notification_id = ? AND status = 'PROCESSING'`
       ).bind(row.notification_id).run()
     } catch (error) {
+      const errorMessage = telegramDelivered && normalizeChannel(row.channel).includes('GMAIL')
+        ? `Telegram was delivered, but ${error.message}`
+        : error.message
       await env.DB.prepare(
         `UPDATE notifications SET status = 'FAILED', error_message = ?,
            processing_started_at = NULL
           WHERE notification_id = ? AND status = 'PROCESSING'`
-      ).bind(error.message, row.notification_id).run()
+      ).bind(errorMessage, row.notification_id).run()
     }
   }
 }

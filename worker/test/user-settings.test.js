@@ -55,6 +55,20 @@ test('preserves timezone preferences and removes read-only Gmail endpoints', asy
   assert.equal(loaded.status, 200)
   assert.deepEqual(await loaded.json(), { timezone: 'Asia/Tokyo' })
 
+  await proxy.env.DB.prepare(
+    `INSERT INTO notifications
+      (notification_id, title, message, recipient_email, owner_email,
+       scheduled_date, scheduled_time, timezone, channel, status, error_message)
+     VALUES ('failed-gmail', 'Gmail test', 'Message', 'recipient@example.test', ?,
+       '2026-11-03', '14:10', 'Asia/Kolkata', 'BOTH', 'FAILED',
+       'Telegram was delivered, but Gmail delivery failed with HTTP 401 (invalidCredentials)')`
+  ).bind(email).run()
+
+  const notifications = await request(proxy, '/notifications')
+  assert.equal(notifications.status, 200)
+  assert.equal((await notifications.json())[0].errorMessage,
+    'Telegram was delivered, but Gmail delivery failed with HTTP 401 (invalidCredentials)')
+
   for (const [path, method] of [
     ['/gmail/connect', 'POST'],
     ['/gmail/oauth/callback', 'GET'],

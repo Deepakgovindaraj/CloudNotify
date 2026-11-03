@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react'
 import { Search, ChevronUp, ChevronDown, Trash2 } from 'lucide-react'
 import { useNotifications } from '@/hooks/useNotifications'
 import { StatusBadge, ChannelBadge } from '@/components/ui/Badge'
-import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
@@ -155,7 +154,14 @@ export function HistoryPage() {
                     <td className="px-4 py-3"><ChannelBadge channel={n.channel} /></td>
                     <td className="px-4 py-3 text-slate-500">{formatDate(n.date, n.timezone || user?.timezone, locale)}</td>
                     <td className="px-4 py-3 text-slate-500">{formatTime(n.time, locale)}</td>
-                    <td className="px-4 py-3"><StatusBadge status={n.status} /></td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={n.status} />
+                      {n.status === 'FAILED' && n.errorMessage && (
+                        <p className="mt-1 max-w-56 text-xs leading-5 text-red-600 dark:text-red-300" role="note">
+                          {n.errorMessage}
+                        </p>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <button
                         onClick={() => setDeleteTarget(n)}
