@@ -18,6 +18,7 @@ A modern, production-ready React frontend for **CloudNotify** — a Serverless M
 - Bulk Delivery campaigns with CSV validation, personalized message templates, and PDF generation
 - Cloudflare Pages frontend with a Cloudflare Worker API
 - Cloudflare D1 persistence and scheduled notification delivery
+- Installable Progressive Web App (PWA) for supported mobile browsers
 
 ## Tech Stack
 
@@ -46,6 +47,19 @@ npm run build
 # Preview production build
 npm run preview
 ```
+
+## Mobile PWA
+
+CloudNotify can be installed from its HTTPS website on supported mobile browsers.
+On Android, use the browser's **Install app** option. On iPhone or iPad, open the
+site in Safari, tap **Share**, then **Add to Home Screen**.
+
+The service worker caches the application shell and static assets for a faster
+launch and limited offline shell access. Signing in, loading account data, and
+scheduling notifications still require an internet connection. It does not add
+device push notifications or change the existing Gmail/Telegram delivery flow.
+After deploying a new frontend release, reopen or refresh the app while online
+to receive the latest version.
 
 ## Demo Login
 

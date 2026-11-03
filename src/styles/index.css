@@ -631,6 +631,10 @@
     color: #18181b !important;
   }
 
+  .normal-app .swipe-row .notification-card-title.text-white {
+    color: #ffffff !important;
+  }
+
   .normal-app .dashboard-welcome-card .text-white,
   .normal-app .dashboard-welcome-card [class*="text-primary-"] {
     color: #f5f3ff !important;

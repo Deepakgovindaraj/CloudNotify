@@ -14,14 +14,14 @@ export function NotificationCard({ notification, onDelete, compact }) {
     <SwipeRow
       actions={onDelete ? [{ id: 'delete', label: 'Delete' }] : []}
       onCommit={() => onDelete?.(notification)}
-      rowColor="#32145f"
+      rowColor="#4c1d95"
       drawerColor="#4c1d95"
       height={compact ? 112 : 160}
       label={`Notification: ${notification.title}`}
     >
       <div className={cn('min-w-0 flex-1 py-3', !compact && 'py-2')}>
         <div className="min-w-0">
-          <h3 className="truncate font-display font-semibold text-white">
+          <h3 className="notification-card-title truncate font-display font-semibold text-white">
             {notification.title}
           </h3>
           {!compact && (
