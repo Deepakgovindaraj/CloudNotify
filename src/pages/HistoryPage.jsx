@@ -156,9 +156,9 @@ export function HistoryPage() {
                     <td className="px-4 py-3 text-slate-500">{formatTime(n.time, locale)}</td>
                     <td className="px-4 py-3">
                       <StatusBadge status={n.status} />
-                      {n.status === 'FAILED' && n.errorMessage && (
+                      {n.status === 'FAILED' && (
                         <p className="mt-1 max-w-56 text-xs leading-5 text-red-600 dark:text-red-300" role="note">
-                          {n.errorMessage}
+                          {n.errorMessage || 'Failure details are unavailable. Deploy the latest Worker and create a new test notification to capture the cause.'}
                         </p>
                       )}
                     </td>
