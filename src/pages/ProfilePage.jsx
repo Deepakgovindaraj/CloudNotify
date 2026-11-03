@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   Send,
   CheckCircle,
   XCircle,
   Lock,
-  Mail
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { authService } from '@/services/authService'
@@ -14,7 +13,6 @@ import { Toggle } from '@/components/ui/Toggle'
 import { Modal } from '@/components/ui/Modal'
 import { cn } from '@/utils/cn'
 import { telegramService } from '@/services/telegramService'
-import { gmailService } from '@/services/gmailService'
 import { useLanguage } from '@/context/LanguageContext'
 
 function ConnectionCard({
@@ -69,97 +67,6 @@ export function ProfilePage() {
   const [loading, setLoading] = useState(false)
   const [successOpen, setSuccessOpen] = useState(false)
   const [errors, setErrors] = useState({})
-  const [gmailStatus, setGmailStatus] = useState(null)
-  const [gmailBusy, setGmailBusy] = useState(false)
-  const [gmailError, setGmailError] = useState('')
-  const [gmailNotice, setGmailNotice] = useState('')
-  const refreshGmailStatus = useCallback(async () => {
-    try {
-      const status = await gmailService.getConnection()
-      setGmailStatus(status)
-      setGmailError('')
-      return status
-    } catch (error) {
-      setGmailError(error.response?.data?.error || 'Failed to load Gmail connection status.')
-      return null
-    }
-  }, [])
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      refreshGmailStatus()
-      const params = new URLSearchParams(window.location.search)
-      if (params.get('gmail') === 'connected') {
-        setGmailNotice('Gmail mailbox connected. Choose Sync now to import interview invitations.')
-        window.history.replaceState({}, '', window.location.pathname)
-      } else if (params.get('gmail') === 'error') {
-        setGmailError(params.get('reason') === 'authorization_denied'
-          ? 'Gmail authorization was cancelled.'
-          : 'Gmail could not be connected. Check the OAuth configuration and try again.')
-        window.history.replaceState({}, '', window.location.pathname)
-      }
-    }, 0)
-    return () => window.clearTimeout(timer)
-  }, [refreshGmailStatus])
-
-  const connectGmail = async () => {
-    setGmailBusy(true)
-    setGmailError('')
-    try {
-      const { authorizationUrl } = await gmailService.startConnection()
-      const target = new URL(authorizationUrl)
-      if (target.origin !== 'https://accounts.google.com') {
-        throw new Error('Google returned an unexpected authorization address.')
-      }
-      window.location.assign(target.toString())
-    } catch (error) {
-      setGmailError(error.response?.data?.error || error.message || 'Could not start Gmail authorization.')
-      setGmailBusy(false)
-    }
-  }
-
-  const disconnectGmail = async () => {
-    setGmailBusy(true)
-    setGmailError('')
-    try {
-      await gmailService.disconnect()
-      setGmailNotice('Gmail mailbox disconnected.')
-      await refreshGmailStatus()
-    } catch (error) {
-      setGmailError(error.response?.data?.error || 'Could not disconnect Gmail.')
-      await refreshGmailStatus()
-    } finally {
-      setGmailBusy(false)
-    }
-  }
-
-  const syncGmail = async () => {
-    setGmailBusy(true)
-    setGmailError('')
-    setGmailNotice('')
-    try {
-      let result
-      let messagesProcessed = 0
-      let eventsCreated = 0
-      for (let page = 0; page < 5; page += 1) {
-        result = await gmailService.sync()
-        messagesProcessed += result.messagesProcessed
-        eventsCreated += result.eventsCreated
-        if (result.complete) break
-      }
-      if (result?.complete) {
-        setGmailNotice(`Sync complete. Checked ${messagesProcessed} messages and found ${eventsCreated} interview invitation${eventsCreated === 1 ? '' : 's'}.`)
-      } else {
-        setGmailNotice(`Sync is continuing. Checked ${messagesProcessed} messages; choose Sync now again to continue.`)
-      }
-      await refreshGmailStatus()
-    } catch (error) {
-      setGmailError(error.response?.data?.error || 'Gmail synchronization failed.')
-      await refreshGmailStatus()
-    } finally {
-      setGmailBusy(false)
-    }
-  }
 
   const connectTelegram = async () => {
     try {
@@ -242,58 +149,6 @@ export function ProfilePage() {
 
       <div className="space-y-4">
        <h3 className="font-display font-semibold">Integrations</h3>
-       <div className="glass-card space-y-4 p-5">
-         <div className="flex items-start justify-between gap-4">
-           <div className="flex items-start gap-3">
-             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-rose-600">
-               <Mail className="h-5 w-5 text-white" />
-             </div>
-             <div>
-               <p className="font-medium">Gmail mailbox (read-only)</p>
-               <p className="text-sm text-slate-500">
-                 {gmailStatus?.connected
-                   ? `Connected as ${gmailStatus.email}`
-                   : gmailStatus?.status === 'REAUTH_REQUIRED'
-                     ? 'Authorization expired or revoked. Reconnect to continue syncing.'
-                     : 'Not connected. Google sign-in does not grant inbox access.'}
-               </p>
-               {gmailStatus?.lastSuccessfulSyncAt && (
-                 <p className="mt-1 text-xs text-slate-500">
-                   Last successful sync: {new Date(gmailStatus.lastSuccessfulSyncAt).toLocaleString()}
-                 </p>
-               )}
-               {gmailStatus?.syncStatus === 'SYNCING' && (
-                 <p className="mt-1 text-xs text-sky-600">Synchronization is in progress.</p>
-               )}
-               {gmailStatus?.error && (
-                 <p className="mt-1 text-xs text-amber-600">
-                   Sync status: {gmailStatus.error}
-                 </p>
-               )}
-             </div>
-           </div>
-           <span className={gmailStatus?.connected ? 'text-emerald-500' : 'text-slate-400'} aria-label={gmailStatus?.connected ? 'Connected' : 'Not connected'}>
-             {gmailStatus?.connected ? <CheckCircle className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
-           </span>
-         </div>
-         {gmailError && <p className="text-sm text-red-500" role="alert">{gmailError}</p>}
-         {gmailNotice && <p className="text-sm text-emerald-600 dark:text-emerald-400" role="status">{gmailNotice}</p>}
-         <div className="flex flex-wrap gap-2">
-           <Button size="sm" loading={gmailBusy} onClick={connectGmail}>
-             {gmailStatus?.status === 'REAUTH_REQUIRED' ? 'Reconnect Gmail' : 'Connect Gmail'}
-           </Button>
-           {gmailStatus?.connected && (
-             <Button variant="secondary" size="sm" loading={gmailBusy} onClick={syncGmail}>
-               Sync now
-             </Button>
-           )}
-           {gmailStatus && gmailStatus.status !== 'DISCONNECTED' && (
-             <Button variant="ghost" size="sm" disabled={gmailBusy} onClick={disconnectGmail}>
-               Disconnect
-             </Button>
-           )}
-         </div>
-       </div>
        <ConnectionCard
          title="Telegram"
           connected={user?.telegramConnected}

@@ -90,9 +90,14 @@ npx wrangler secret put GMAIL_SENDER
 npm run deploy
 ```
 
-Run `npm run db:migrate:remote` again after pulling new migration files. The
-notification timezone migration stores each schedule's IANA timezone, so new
-notifications run in the timezone selected in Settings.
+Run `npm run db:migrate:remote` again after pulling new migration files. This
+applies migration `0008_remove_read_only_gmail.sql`, which removes the skipped
+read-only Gmail mailbox and interview-event data and cancels its pending
+reminders. Google authorization grants made before this change are not revoked
+by a database migration; revoke CloudNotify's access in your Google Account
+settings if you previously connected a mailbox. The notification timezone
+migration stores each schedule's IANA timezone, so new notifications run in
+the timezone selected in Settings.
 
 `GMAIL_SENDER` is the Gmail account authorized for the Gmail API. The
 `TELEGRAM_WEBHOOK_SECRET` value must match the secret token configured on the
@@ -112,53 +117,11 @@ Template fields accept placeholders such as `{{candidate_name}}`,
 `{{organization_name}}`, `{{campaign_date}}`, `{{sender_name}}`, and mapped CSV
 column names (for example `{{job_role}}`).
 
-### Gmail Intelligence (read-only mailbox connection)
-
-Google sign-in and Gmail inbox access are separate. The Gmail integration
-requests only `https://www.googleapis.com/auth/gmail.readonly`; it does not
-replace or change the existing global Gmail sender used for outgoing reminders.
-
-1. Enable the Gmail API in the Google Cloud project used by CloudNotify.
-2. Add this exact redirect URI to the OAuth web client’s **Authorized redirect URIs**:
-   `${VITE_API_BASE_URL}/gmail/oauth/callback` (without a trailing slash).
-   For local Worker development, also authorize
-   `http://localhost:8787/gmail/oauth/callback`.
-3. Add the Gmail read-only scope to the OAuth consent screen and add test users
-   while the app is in testing. Google may require app verification and a
-   security assessment before external users can authorize this restricted
-   Gmail scope.
-4. Configure the Worker’s `GMAIL_APP_ORIGINS` variable as a comma-separated
-   allowlist of exact frontend origins, for example
-   `https://cloudnotify.pages.dev,http://localhost:5173`. Do not use `*`.
-5. Set the Worker secret `GMAIL_TOKEN_ENCRYPTION_KEY` to a newly generated,
-   base64-encoded 32-byte key. Generate it locally with:
-   `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"`
-   Store the output in a password manager and configure it with
-   `npx wrangler secret put GMAIL_TOKEN_ENCRYPTION_KEY`. Do not commit the key.
-6. Optionally set the Worker variable `GMAIL_SYNC_QUERY`. The default is
-   `newer_than:30d {category:primary category:updates}` so initial sync is
-   limited to recent Primary and Updates mail; set an appropriately restricted
-   Gmail search query if your supported categories differ.
-7. Apply the additive D1 migrations before deploying the Worker:
-   `cd worker && npm run db:migrate:remote`
-
-Google refresh tokens are encrypted with AES-GCM before being stored in D1 and
-are never returned to the browser. OAuth uses a single-use state and PKCE
-challenge. The synchronizer stores message IDs and minimal timestamps only;
-email content is processed in memory and not retained. Potential invitations
-are heuristic detections with confidence scores, not AI-generated facts. Users
-must review and confirm an event before reminders are created. The day-before
-reminder is scheduled for 9:00 AM local time; the morning-of reminder is
-scheduled for 8:00 AM, or 30 minutes before interviews starting by 8:30 AM.
-Past reminder times are skipped rather than sent late.
-The existing Worker cron incrementally checks connected mailboxes every 15
-minutes (with initial-sync pages resumed as needed); **Sync now** can continue
-additional pages immediately.
-
-The mailbox connection is per user and can be disconnected from **Profile**.
-The existing global `GOOGLE_REFRESH_TOKEN`, `GMAIL_SENDER`, Gmail outgoing
-delivery, Telegram integration, sign-in flow, and scheduled notification
-records remain separate.
+Gmail is used as a configured delivery channel for scheduled notifications.
+CloudNotify does not connect to or read a user's Gmail inbox. Google sign-in
+and outgoing Gmail notification delivery remain separate features. Read-only
+mailbox synchronization and automatic interview-invitation detection are not
+part of the current plan.
 
 Google sign-in credentials are verified by the Worker through Google's
 token-introspection endpoint. The Worker issues a short-lived opaque session

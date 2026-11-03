@@ -1,4 +1,3 @@
-import { createGmailHandlers } from './gmail-routes.js'
 import { createBulkCampaignHandlers } from './bulk-campaign-routes.js'
 
 const JSON_HEADERS = {
@@ -84,6 +83,60 @@ async function authenticatedUser(request, env) {
     `SELECT email FROM auth_sessions
       WHERE token_hash = ? AND expires_at > CURRENT_TIMESTAMP`
   ).bind(tokenHash).first()
+}
+
+function validTimezone(value) {
+  if (typeof value !== 'string' || value.length > 100) return false
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: value })
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function getUserPreferences(request, env) {
+  const origin = getOrigin(request, env)
+  const user = await authenticatedUser(request, env)
+  if (!user) return json({ error: 'Authentication is required' }, 401, origin)
+  let row = await env.DB.prepare(
+    'SELECT timezone FROM user_settings WHERE owner_email = ?'
+  ).bind(user.email).first()
+  if (!row) {
+    const requestedTimezone = new URL(request.url).searchParams.get('timezone')
+    const timezone = validTimezone(requestedTimezone)
+      ? requestedTimezone
+      : env.APP_TIME_ZONE || 'UTC'
+    await env.DB.prepare(
+      'INSERT OR IGNORE INTO user_settings (owner_email, timezone) VALUES (?, ?)'
+    ).bind(user.email, timezone).run()
+    row = await env.DB.prepare(
+      'SELECT timezone FROM user_settings WHERE owner_email = ?'
+    ).bind(user.email).first()
+  }
+  return json({ timezone: row?.timezone || env.APP_TIME_ZONE || 'UTC' }, 200, origin)
+}
+
+async function updateUserPreferences(request, env) {
+  const origin = getOrigin(request, env)
+  const user = await authenticatedUser(request, env)
+  if (!user) return json({ error: 'Authentication is required' }, 401, origin)
+  let body
+  try {
+    body = await request.json()
+  } catch {
+    return json({ error: 'Invalid JSON body' }, 400, origin)
+  }
+  if (!validTimezone(body.timezone)) {
+    return json({ error: 'A valid IANA timezone is required' }, 400, origin)
+  }
+  await env.DB.prepare(
+    `INSERT INTO user_settings (owner_email, timezone)
+     VALUES (?, ?)
+     ON CONFLICT(owner_email) DO UPDATE SET
+       timezone = excluded.timezone, updated_at = CURRENT_TIMESTAMP`
+  ).bind(user.email, body.timezone).run()
+  return json({ timezone: body.timezone }, 200, origin)
 }
 
 async function authenticateGoogle(request, env) {
@@ -416,16 +469,6 @@ function getScheduledTime(timeZone) {
   }
 }
 
-const gmailHandlers = createGmailHandlers({
-  json,
-  getOrigin,
-  authenticatedUser,
-  hashValue,
-  parseTime,
-  normalizeChannel,
-  getScheduledTime,
-})
-
 const bulkCampaignHandlers = createBulkCampaignHandlers({
   json,
   getOrigin,
@@ -470,20 +513,12 @@ async function processDueNotifications(env) {
            error_message = NULL, processing_started_at = NULL
           WHERE notification_id = ? AND status = 'PROCESSING'`
       ).bind(row.notification_id).run()
-      await env.DB.prepare(
-        `UPDATE interview_reminders SET status = 'SENT', updated_at = CURRENT_TIMESTAMP
-          WHERE notification_id = ?`
-      ).bind(row.notification_id).run()
     } catch (error) {
       await env.DB.prepare(
         `UPDATE notifications SET status = 'FAILED', error_message = ?,
            processing_started_at = NULL
           WHERE notification_id = ? AND status = 'PROCESSING'`
       ).bind(error.message, row.notification_id).run()
-      await env.DB.prepare(
-        `UPDATE interview_reminders SET status = 'FAILED', updated_at = CURRENT_TIMESTAMP
-          WHERE notification_id = ?`
-      ).bind(row.notification_id).run()
     }
   }
 }
@@ -505,11 +540,6 @@ export default {
       if (url.pathname === '/auth/google' && request.method === 'POST') return await authenticateGoogle(request, env)
       if (url.pathname === '/notifications' && request.method === 'GET') return await listNotifications(request, env)
       if (url.pathname === '/notifications' && request.method === 'POST') return await createNotification(request, env)
-      if (url.pathname === '/gmail/connect' && request.method === 'POST') return await gmailHandlers.connect(request, env)
-      if (url.pathname === '/gmail/oauth/callback' && request.method === 'GET') return await gmailHandlers.callback(request, env)
-      if (url.pathname === '/gmail/connection' && request.method === 'GET') return await gmailHandlers.connectionStatus(request, env)
-      if (url.pathname === '/gmail/connection' && request.method === 'DELETE') return await gmailHandlers.disconnect(request, env)
-      if (url.pathname === '/gmail/sync' && request.method === 'POST') return await gmailHandlers.sync(request, env)
       if (url.pathname === '/campaigns') {
         if (request.method === 'GET') return await bulkCampaignHandlers.list(request, env)
         if (request.method === 'POST') return await bulkCampaignHandlers.create(request, env)
@@ -523,28 +553,11 @@ export default {
           return await bulkCampaignHandlers.updateTemplates(request, env, decodedId)
         }
       }
-      if (url.pathname === '/interview-events' && request.method === 'GET') return await gmailHandlers.events(request, env)
-      if (url.pathname.startsWith('/interview-events/')) {
-        const parts = url.pathname.split('/').filter(Boolean)
-        const eventId = parts[1]
-        if (parts.length === 2 && request.method === 'PATCH') {
-          return await gmailHandlers.updateEvent(request, env, eventId)
-        }
-        if (parts.length === 3 && parts[2] === 'confirm' && request.method === 'POST') {
-          return await gmailHandlers.confirmEvent(request, env, eventId)
-        }
-        if (parts.length === 3 && parts[2] === 'reject' && request.method === 'POST') {
-          return await gmailHandlers.rejectEvent(request, env, eventId)
-        }
-        if (parts.length === 2 && request.method === 'DELETE') {
-          return await gmailHandlers.deleteEvent(request, env, eventId)
-        }
-      }
       if (url.pathname === '/user/preferences' && request.method === 'GET') {
-        return await gmailHandlers.preferences(request, env)
+        return await getUserPreferences(request, env)
       }
       if (url.pathname === '/user/preferences' && request.method === 'PUT') {
-        return await gmailHandlers.updatePreferences(request, env)
+        return await updateUserPreferences(request, env)
       }
       if (url.pathname.startsWith('/notifications/') && request.method === 'DELETE') {
         return await deleteNotification(request, env, url.pathname.split('/').pop())
@@ -562,7 +575,6 @@ export default {
 
   async scheduled(_event, env, ctx) {
     ctx.waitUntil(processDueNotifications(env))
-    ctx.waitUntil(gmailHandlers.syncScheduled(env))
   },
 }
 

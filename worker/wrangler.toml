@@ -14,13 +14,9 @@ migrations_dir = "migrations"
 [vars]
 APP_ORIGIN = "*"
 APP_TIME_ZONE = "Asia/Kolkata"
-GMAIL_APP_ORIGINS = "https://cloudnotify.pages.dev,https://685febad.cloudnotify.pages.dev"
 
 # Configure secrets with:
 # wrangler secret put TELEGRAM_BOT_TOKEN
 # wrangler secret put TELEGRAM_WEBHOOK_SECRET
 # wrangler secret put RESEND_API_KEY
 # wrangler secret put MAIL_FROM
-# wrangler secret put GMAIL_TOKEN_ENCRYPTION_KEY
-# Set GMAIL_APP_ORIGINS to exact Pages origins (never *) in Worker variables.
-# GMAIL_SYNC_QUERY is optional; the default limits sync to recent Primary/Updates mail.

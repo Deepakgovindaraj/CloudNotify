@@ -109,7 +109,7 @@ notify('Account ready', 'Your account is ready to use CloudNotify.')
       telegramConnected: false
     })
     welcomeIfFirstLogin(googleUser.email)
-    notify('Signed in with Google', 'Connect Gmail separately if you want CloudNotify to review inbox messages.')
+    notify('Signed in with Google', 'Your account is ready. Schedule a notification or connect Telegram from your profile.')
 
     channelService
       .getStatus(googleUser.email)

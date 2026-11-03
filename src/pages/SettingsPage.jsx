@@ -7,7 +7,7 @@ import { Toggle } from '@/components/ui/Toggle'
 import { TIMEZONES, LANGUAGES } from '@/constants/config'
 import { cn } from '@/utils/cn'
 import { useLanguage } from '@/context/LanguageContext'
-import { gmailService } from '@/services/gmailService'
+import { userSettingsService } from '@/services/userSettingsService'
 
 export function SettingsPage() {
   const { appearance, setAppearance } = useTheme()
@@ -19,7 +19,7 @@ export function SettingsPage() {
 
   useEffect(() => {
     let active = true
-    gmailService.getPreferences(initialTimezone)
+    userSettingsService.getPreferences(initialTimezone)
       .then((preferences) => {
         if (!active) return
         setTimezone(preferences.timezone)
@@ -84,7 +84,7 @@ export function SettingsPage() {
             setTimezone(nextTimezone)
             updateUser({ timezone: nextTimezone })
             setTimezoneError('')
-            gmailService.updatePreferences({ timezone: nextTimezone }).catch((error) => {
+            userSettingsService.updatePreferences({ timezone: nextTimezone }).catch((error) => {
               setTimezoneError(error.response?.data?.error || 'Could not save your timezone.')
             })
           }}

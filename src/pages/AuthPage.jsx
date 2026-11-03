@@ -19,6 +19,7 @@ import {
 import { useAuth } from '@/context/AuthContext'
 import { ROUTES } from '@/constants/routes'
 import { APP_NAME } from '@/constants/config'
+import { LoginFooter } from '@/components/public/LoginFooter'
 import GradientText from '@/components/GradientText'
 import GradientWaves from '@/components/GradientWaves'
 import {
@@ -536,6 +537,7 @@ export function AuthPage() {
         </section>
         </div>
       </div>
+      <LoginFooter />
     </>
   )
 }
