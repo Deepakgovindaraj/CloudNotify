@@ -20,6 +20,7 @@ import { useAuth } from '@/context/AuthContext'
 import { ROUTES } from '@/constants/routes'
 import { APP_NAME } from '@/constants/config'
 import { LoginFooter } from '@/components/public/LoginFooter'
+import SpecularButton from '@/components/ui/SpecularButton'
 import GradientText from '@/components/GradientText'
 import GradientWaves from '@/components/GradientWaves'
 import {
@@ -170,17 +171,42 @@ export function AuthPage() {
                   id="google-sign-in"
                   ref={googleButtonRef}
                   tabIndex={-1}
-                  className="specular-button specular-button--google flex justify-center [&>div]:flex [&>div]:justify-center"
+                  className="flex justify-center [&>div]:flex [&>div]:justify-center"
                 >
-                  <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={handleGoogleError}
-                    theme="filled_black"
-                    size="large"
-                    text="signin_with"
-                    shape="rectangular"
-                    width="320"
-                  />
+                  <SpecularButton
+                    as="div"
+                    className="specular-button--google-login"
+                    lineColor="#ffffff"
+                    baseColor="#525252"
+                    intensity={1}
+                    idleIntensity={0.35}
+                    shineSize={10}
+                    shineFade={34}
+                    thickness={1.2}
+                    radius={12}
+                    glow={1}
+                    followMouse
+                    proximity={250}
+                    autoAnimate
+                  >
+                    <GoogleLogin
+                      onSuccess={handleGoogleSuccess}
+                      onError={handleGoogleError}
+                      theme="filled_black"
+                      size="large"
+                      text="signin_with"
+                      shape="rectangular"
+                      width="320"
+                      containerProps={{
+                        style: {
+                          width: '320px',
+                          height: '40px',
+                          background: 'transparent',
+                          overflow: 'hidden',
+                        },
+                      }}
+                    />
+                  </SpecularButton>
                 </div>
               </div>
             )}
@@ -520,14 +546,30 @@ export function AuthPage() {
               <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-white/60">
                 Experience smarter notification management with CloudNotify.
               </p>
-              <button
-                type="button"
+              <SpecularButton
                 onClick={handleScrollToGoogleSignIn}
-                className="mt-8 inline-flex items-center gap-3 rounded-xl bg-gradient-to-r from-[#7950F2] to-[#9A5CF6] px-6 py-3.5 text-sm font-semibold text-white shadow-[0_8px_32px_rgba(121,80,242,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_36px_rgba(121,80,242,0.42)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B56CFF]"
+                size="md"
+                radius={12}
+                tint="#171421"
+                tintOpacity={0.72}
+                blur={12}
+                textColor="#ffffff"
+                lineColor="#ffffff"
+                baseColor="#8D74B8"
+                intensity={1}
+                idleIntensity={0.35}
+                shineSize={10}
+                shineFade={34}
+                thickness={1.2}
+                glow={1}
+                followMouse
+                proximity={250}
+                autoAnimate
+                className="mt-8 text-sm font-semibold shadow-[0_8px_32px_rgba(0,0,0,0.28)] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_36px_rgba(141,116,184,0.3)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B56CFF]"
               >
                 <Mail className="h-4 w-4" />
                 Sign in with Google
-              </button>
+              </SpecularButton>
             </div>
           </motion.div>
           <div className="mx-auto mt-10 flex items-center justify-center gap-2 text-xs text-white/35">
