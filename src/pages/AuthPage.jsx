@@ -183,8 +183,8 @@ export function AuthPage() {
                     shineSize={10}
                     shineFade={34}
                     thickness={1.2}
-                    radius={12}
-                    glow={1}
+                    radius={3}
+                    glow={1.5}
                     followMouse
                     proximity={250}
                     autoAnimate
